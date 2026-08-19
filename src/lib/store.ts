@@ -54,11 +54,19 @@ let memoryPosts: PostData[] = [
 ];
 
 let memoryQuestions: QuestionData[] = [
-  { id: 1, postId: 1, promptText: "TEBAK GAMBAR: Bangunanapakah yang ada pada gambar di bawah ini?", imageUrl: "https://images.unsplash.com/photo-1596402184320-417e7178b2cd?w=600&auto=format&fit=crop&q=80", options: ["Monumen Nasional (Monas)", "Candi Borobudur", "Gedung Sate", "Jam Gadang"], correctOpt: "A", points: 25 },
-  { id: 2, postId: 1, promptText: "TEBAK GAMBAR: Burungapakah yang menjadi lambang garuda dalam gambar ini?", imageUrl: "https://images.unsplash.com/photo-1611689342806-0863700ce1e4?w=600&auto=format&fit=crop&q=80", options: ["Burung Elang Jawa", "Burung Merpati", "Burung Cenderawasih", "Burung Kakaktua"], correctOpt: "A", points: 25 },
+  // POS 1 Questions
+  { id: 1, postId: 1, promptText: "TEBAK GAMBAR: Bangunan apakah yang ada pada gambar di bawah ini?", imageUrl: "https://images.unsplash.com/photo-1596402184320-417e7178b2cd?w=600&auto=format&fit=crop&q=80", options: ["Monumen Nasional (Monas)", "Candi Borobudur", "Gedung Sate", "Jam Gadang"], correctOpt: "A", points: 20 },
+  { id: 2, postId: 1, promptText: "TEBAK GAMBAR: Burung apakah yang menjadi lambang garuda dalam gambar ini?", imageUrl: "https://images.unsplash.com/photo-1611689342806-0863700ce1e4?w=600&auto=format&fit=crop&q=80", options: ["Burung Elang Jawa", "Burung Merpati", "Burung Cenderawasih", "Burung Kakaktua"], correctOpt: "A", points: 20 },
   { id: 3, postId: 1, promptText: "Berapa jumlah warna utama dalam pelangi dasar?", imageUrl: null, options: ["3 Warna", "5 Warna", "7 Warna", "9 Warna"], correctOpt: "C", points: 20 },
   { id: 4, postId: 1, promptText: "Apa nama ibukota Indonesia yang baru di Kalimantan?", imageUrl: null, options: ["Nusantara", "Ibu Kota Baru", "Penajam", "Balikpapan"], correctOpt: "A", points: 20 },
   { id: 5, postId: 1, promptText: "Berapa jumlah roda pada becak motor konvensional?", imageUrl: null, options: ["2 Roda", "3 Roda", "4 Roda", "5 Roda"], correctOpt: "B", points: 20 },
+
+  // POS 2 Questions
+  { id: 6, postId: 2, promptText: "Siapakah pencipta lagu kebangsaan Indonesia Raya?", imageUrl: null, options: ["W.R. Supratman", "Ismail Marzuki", "C. Simanjuntak", "Kusbini"], correctOpt: "A", points: 20 },
+  { id: 7, postId: 2, promptText: "Tanggal berapakah Proklamasi Kemerdekaan Republik Indonesia diperingati?", imageUrl: null, options: ["17 Agustus 1945", "10 November 1945", "28 Oktober 1928", "1 Juni 1945"], correctOpt: "A", points: 20 },
+  { id: 8, postId: 2, promptText: "Provinsi apakah yang merupakan terluas di Indonesia?", imageUrl: null, options: ["Papua", "Kalimantan Timur", "Sumatera Utara", "Jawa Barat"], correctOpt: "A", points: 20 },
+  { id: 9, postId: 2, promptText: "Hewan langka khas endemik Pulau Komodo di Nusa Tenggara Timur adalah...", imageUrl: null, options: ["Komodo", "Badak Bercula Satu", "Anoa", "Orangutan"], correctOpt: "A", points: 20 },
+  { id: 10, postId: 2, promptText: "Lautan terluas di dunia adalah...", imageUrl: null, options: ["Samudra Pasifik", "Samudra Atlantik", "Samudra Hindia", "Samudra Arktik"], correctOpt: "A", points: 20 },
 ];
 
 const memoryScoreLogs: ScoreLogData[] = [];
@@ -192,8 +200,6 @@ export async function createPost(data: Omit<PostData, "id">): Promise<PostData> 
 export async function updatePost(id: number, data: Partial<PostData>): Promise<PostData | null> {
   try {
     await ensureDbSeeded();
-    
-    // Check if post exists in DB first to do upsert or update
     const existing = await prisma.post.findUnique({ where: { id } });
 
     let updated: any;
@@ -216,7 +222,6 @@ export async function updatePost(id: number, data: Partial<PostData>): Promise<P
       });
     }
 
-    // Sync memory state
     const idx = memoryPosts.findIndex((p) => p.id === id);
     if (idx !== -1) {
       memoryPosts[idx] = { ...memoryPosts[idx], ...data };

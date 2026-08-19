@@ -41,9 +41,9 @@ export async function POST(
 
     let calculatedPoints = 0;
 
-    if (post.gameType === "tap_reflex") {
-      calculatedPoints = Math.min(100, Math.max(0, Number(scoreOverride || 0)));
-    } else {
+    // Check game type logic
+    if (post.gameType === "quiz") {
+      // Grade quiz questions against answer keys
       const questions = await getQuestionsByPostId(post.id);
       for (const q of questions) {
         const submittedAns = userAnswers?.[q.id];
@@ -51,6 +51,9 @@ export async function POST(
           calculatedPoints += q.points;
         }
       }
+    } else {
+      // Non-quiz mini-games (tap_reflex, memory_match, speed_math, word_scramble, snake)
+      calculatedPoints = Math.max(0, Number(scoreOverride || 0));
     }
 
     const deviceIdentifier = deviceToken || req.headers.get("x-forwarded-for") || "device_anon";
@@ -80,7 +83,7 @@ export async function POST(
     });
   } catch (error: any) {
     return NextResponse.json(
-      { error: error.message || "Gagal memproses submit jawaban" },
+      { error: error.message || "Gagal memproses submit nilai pos" },
       { status: 500 }
     );
   }
