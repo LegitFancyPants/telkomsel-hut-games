@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Group {
+  id         Int        @id @default(autoincrement())
+  name       String     @unique
+  totalScore Int        @default(0)
+  updatedAt  DateTime   @updatedAt
+  scoreLogs  ScoreLog[]
+
+  @@map("groups")
+}
+
+model Post {
+  id          Int          @id @default(autoincrement())
+  name        String     
+  slug        String       @unique
+  pinCode     String     
+  gameType    String       @default("quiz") // "quiz" | "tap_reflex" | "memory_match" | "speed_math" | "word_scramble" | "snake"
+  timeLimit   Int          @default(60) 
+  isActive    Boolean      @default(true) 
+  questions   Question[]
+  gameConfigs GameConfig[]
+  scoreLogs   ScoreLog[]
+
+  @@map("posts")
+}
+
+model Question {
+  id         Int      @id @default(autoincrement())
+  postId     Int
+  post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  promptText String   
+  imageUrl   String?  // Optional Image URL for Tebak Gambar quiz questions
+  options    String   // JSON stringified array: ["Opsi A", "Opsi B", "Opsi C", "Opsi D"]
+  correctOpt String   // "A", "B", "C", "D"
+  points     Int      @default(20)
+
+  @@map("questions")
+}
+
+model GameConfig {
+  id       Int    @id @default(autoincrement())
+  postId   Int
+  post     Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  gameType String 
+  payload  String 
+
+  @@map("game_configs")
+}
+
+model ScoreLog {
+  id            String   @id @default(uuid())
+  groupId       Int
+  group         Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  postId        Int
+  post          Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  pointsAwarded Int
+  deviceToken   String   
+  createdAt     DateTime @default(now())
+
+  @@map("score_logs")
+}
+
+model AdminUser {
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  password String 
+
+  @@map("admin_users")
+}
