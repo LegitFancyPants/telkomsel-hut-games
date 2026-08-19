@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Clock, Trophy, ShieldCheck, Star, Sparkles, Flame, Eye, Zap, Award, Compass, Heart, Crown, Gem, Sun, Target, CheckCircle2, ChevronRight, Gift } from "lucide-react";
+import { Clock, Trophy, ShieldCheck, Star, Sparkles, Flame, Eye, Zap, Award, Compass, Heart, Crown, Gem, Sun, Target, CheckCircle2, ChevronRight } from "lucide-react";
 import { formatTime } from "@/lib/utils";
 
 interface MemoryGameProps {
@@ -18,7 +18,6 @@ interface CardItem {
   symbolName: string;
   isFlipped: boolean;
   isMatched: boolean;
-  isBonusCard?: boolean; // Special bonus card for 3x3 Stage 2
 }
 
 const ALL_SYMBOLS = [
@@ -54,74 +53,23 @@ export default function MemoryGame({
 
   // Initialize cards for a given stage
   const setupStage = (stage: 1 | 2 | 3 | 4 | 5) => {
-    if (stage === 1) {
-      // Stage 1: 2x2 Grid (4 Cards = 2 Pairs)
-      const selectedSymbols = ALL_SYMBOLS.slice(0, 2);
-      const cardDeck: CardItem[] = [];
-      selectedSymbols.forEach((sym) => {
-        cardDeck.push({ id: cardDeck.length, symbolId: sym.id, symbolName: sym.name, isFlipped: false, isMatched: false });
-        cardDeck.push({ id: cardDeck.length, symbolId: sym.id, symbolName: sym.name, isFlipped: false, isMatched: false });
-      });
-      const shuffled = cardDeck.sort(() => Math.random() - 0.5).map((card, idx) => ({ ...card, id: idx }));
-      setCards(shuffled);
-    } else if (stage === 2) {
-      // Stage 2: 3x3 Full Grid (9 Cards = 8 Cards/4 Pairs + 1 Special Bonus Card)
-      const selectedSymbols = ALL_SYMBOLS.slice(0, 4);
-      const cardDeck: CardItem[] = [];
-      selectedSymbols.forEach((sym) => {
-        cardDeck.push({ id: cardDeck.length, symbolId: sym.id, symbolName: sym.name, isFlipped: false, isMatched: false });
-        cardDeck.push({ id: cardDeck.length, symbolId: sym.id, symbolName: sym.name, isFlipped: false, isMatched: false });
-      });
-      const shuffled8 = cardDeck.sort(() => Math.random() - 0.5);
+    let pairCount = 2;
+    if (stage === 1) pairCount = 2; // Stage 1: 2x2 = 4 cards (2 pairs)
+    if (stage === 2) pairCount = 4; // Stage 2: 2x4 = 8 cards (4 pairs)
+    if (stage === 3) pairCount = 8; // Stage 3: 4x4 = 16 cards (8 pairs)
+    if (stage === 4) pairCount = 10; // Stage 4: 4x5 = 20 cards (10 pairs)
+    if (stage === 5) pairCount = 12; // Stage 5: 4x6 = 24 cards (12 pairs)
 
-      const bonusCard: CardItem = {
-        id: 999,
-        symbolId: 999,
-        symbolName: "Bonus",
-        isFlipped: false,
-        isMatched: false,
-        isBonusCard: true,
-      };
+    const selectedSymbols = ALL_SYMBOLS.slice(0, pairCount);
+    const cardDeck: CardItem[] = [];
 
-      const grid9: CardItem[] = [
-        ...shuffled8.slice(0, 4),
-        bonusCard,
-        ...shuffled8.slice(4, 8),
-      ].map((card, idx) => ({ ...card, id: idx }));
+    selectedSymbols.forEach((sym) => {
+      cardDeck.push({ id: cardDeck.length, symbolId: sym.id, symbolName: sym.name, isFlipped: false, isMatched: false });
+      cardDeck.push({ id: cardDeck.length, symbolId: sym.id, symbolName: sym.name, isFlipped: false, isMatched: false });
+    });
 
-      setCards(grid9);
-    } else if (stage === 3) {
-      // Stage 3: 4x4 Grid (16 Cards = 8 Pairs)
-      const selectedSymbols = ALL_SYMBOLS.slice(0, 8);
-      const cardDeck: CardItem[] = [];
-      selectedSymbols.forEach((sym) => {
-        cardDeck.push({ id: cardDeck.length, symbolId: sym.id, symbolName: sym.name, isFlipped: false, isMatched: false });
-        cardDeck.push({ id: cardDeck.length, symbolId: sym.id, symbolName: sym.name, isFlipped: false, isMatched: false });
-      });
-      const shuffled = cardDeck.sort(() => Math.random() - 0.5).map((card, idx) => ({ ...card, id: idx }));
-      setCards(shuffled);
-    } else if (stage === 4) {
-      // Stage 4: 4x5 Grid (20 Cards = 10 Pairs)
-      const selectedSymbols = ALL_SYMBOLS.slice(0, 10);
-      const cardDeck: CardItem[] = [];
-      selectedSymbols.forEach((sym) => {
-        cardDeck.push({ id: cardDeck.length, symbolId: sym.id, symbolName: sym.name, isFlipped: false, isMatched: false });
-        cardDeck.push({ id: cardDeck.length, symbolId: sym.id, symbolName: sym.name, isFlipped: false, isMatched: false });
-      });
-      const shuffled = cardDeck.sort(() => Math.random() - 0.5).map((card, idx) => ({ ...card, id: idx }));
-      setCards(shuffled);
-    } else if (stage === 5) {
-      // Stage 5: 4x6 Grid (24 Cards = 12 Pairs)
-      const selectedSymbols = ALL_SYMBOLS.slice(0, 12);
-      const cardDeck: CardItem[] = [];
-      selectedSymbols.forEach((sym) => {
-        cardDeck.push({ id: cardDeck.length, symbolId: sym.id, symbolName: sym.name, isFlipped: false, isMatched: false });
-        cardDeck.push({ id: cardDeck.length, symbolId: sym.id, symbolName: sym.name, isFlipped: false, isMatched: false });
-      });
-      const shuffled = cardDeck.sort(() => Math.random() - 0.5).map((card, idx) => ({ ...card, id: idx }));
-      setCards(shuffled);
-    }
-
+    const shuffled = cardDeck.sort(() => Math.random() - 0.5).map((card, idx) => ({ ...card, id: idx }));
+    setCards(shuffled);
     setFlippedIndices([]);
     setMatchedPairsCount(0);
   };
@@ -175,20 +123,8 @@ export default function MemoryGame({
   // Card Flip Logic
   const handleCardClick = (index: number) => {
     if (gameState !== "PLAYING") return;
-
-    const clickedCard = cards[index];
-
-    // Special Bonus Card handling in Stage 2 (3x3 grid middle slot)
-    if (clickedCard.isBonusCard && !clickedCard.isMatched) {
-      setCards((prev) =>
-        prev.map((c, i) => (i === index ? { ...c, isFlipped: true, isMatched: true } : c))
-      );
-      setAccumulatedPoints((prev) => prev + 50); // Bonus 50 PTS!
-      return;
-    }
-
     if (flippedIndices.length >= 2) return;
-    if (clickedCard.isFlipped || clickedCard.isMatched) return;
+    if (cards[index].isFlipped || cards[index].isMatched) return;
 
     const newCards = [...cards];
     newCards[index].isFlipped = true;
@@ -286,7 +222,7 @@ export default function MemoryGame({
           </p>
           <div className="flex flex-wrap justify-center gap-1.5 text-[10px] text-slate-400 mb-6 font-mono">
             <span className="px-2 py-0.5 rounded bg-slate-950 border border-slate-800">S1: 2x2</span>
-            <span className="px-2 py-0.5 rounded bg-slate-950 border border-slate-800">S2: 3x3</span>
+            <span className="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-sky-300 font-bold">S2: 2x4</span>
             <span className="px-2 py-0.5 rounded bg-slate-950 border border-slate-800">S3: 4x4</span>
             <span className="px-2 py-0.5 rounded bg-slate-950 border border-slate-800">S4: 4x5</span>
             <span className="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-amber-400 font-bold">S5: 4x6</span>
@@ -340,7 +276,7 @@ export default function MemoryGame({
                 <span>
                   LANJUT KE STAGE {currentStage + 1} (
                   {currentStage + 1 === 2
-                    ? "3x3 GRID"
+                    ? "2x4 GRID"
                     : currentStage + 1 === 3
                     ? "4x4 GRID"
                     : currentStage + 1 === 4
@@ -357,7 +293,7 @@ export default function MemoryGame({
                 currentStage === 1
                   ? "grid-cols-2 max-w-[200px]"
                   : currentStage === 2
-                  ? "grid-cols-3 max-w-[270px]"
+                  ? "grid-cols-4 max-w-[340px]"
                   : currentStage === 3
                   ? "grid-cols-4 max-w-[340px]"
                   : currentStage === 4
@@ -368,34 +304,6 @@ export default function MemoryGame({
               {cards.map((card, idx) => {
                 const SymbolIcon = ALL_SYMBOLS.find((s) => s.id === card.symbolId)?.Icon || Star;
                 const isShow = card.isFlipped || card.isMatched;
-
-                if (card.isBonusCard) {
-                  return (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => handleCardClick(idx)}
-                      disabled={card.isMatched}
-                      className={`h-16 sm:h-20 rounded-xl border-2 font-bold flex flex-col items-center justify-center transition-all duration-300 select-none ${
-                        card.isMatched
-                          ? "bg-amber-950/80 border-amber-500 text-amber-300 opacity-90 shadow-md"
-                          : "bg-amber-950/40 border-amber-600/80 hover:border-amber-400 text-amber-400 animate-pulse-subtle"
-                      }`}
-                    >
-                      {card.isMatched ? (
-                        <div className="flex flex-col items-center">
-                          <Gift className="w-5 h-5 text-amber-400" />
-                          <span className="text-[9px] font-mono font-bold text-amber-300">+50</span>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center gap-0.5">
-                          <Gift className="w-4 h-4 text-amber-400" />
-                          <span className="text-[8px] font-bold text-amber-300 uppercase">BONUS</span>
-                        </div>
-                      )}
-                    </button>
-                  );
-                }
 
                 return (
                   <button
