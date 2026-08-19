@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Clock, Trophy, Calculator, CheckCircle2, Delete, Zap, Award } from "lucide-react";
+import { Clock, Trophy, Calculator, CheckCircle2, Delete, Zap } from "lucide-react";
 import { formatTime } from "@/lib/utils";
 
 interface SpeedMathGameProps {
@@ -34,11 +34,8 @@ export default function SpeedMathGame({
   const [timeLeft, setTimeLeft] = useState<number>(timeLimit || 120); // Default 2 Menit (120s)
   const [feedback, setFeedback] = useState<"CORRECT" | "WRONG" | null>(null);
 
-  // Dynamic Math Problem Generator with Progressive Length
+  // Dynamic Math Problem Generator with Bulletproof Precision
   const generateProblem = useCallback((currentSolved: number): GeneratedMathProblem => {
-    // Level 1 (0-5 soal): 2 operands (e.g. 8 + 6)
-    // Level 2 (6-12 soal): 3 operands (e.g. 5 + 4 - 2)
-    // Level 3 (13+ soal): 4 operands (e.g. 6 + 3 + 5 - 4)
     let level = 1;
     let numOperands = 2;
 
@@ -50,52 +47,70 @@ export default function SpeedMathGame({
       numOperands = 3;
     }
 
-    const operators = ["+", "-", "×"];
-    let nums: number[] = [];
-    let ops: string[] = [];
-
-    // Generate random numbers (small basic arithmetic)
-    for (let i = 0; i < numOperands; i++) {
-      nums.push(Math.floor(Math.random() * 12) + 2); // 2 to 13
-    }
-
-    for (let i = 0; i < numOperands - 1; i++) {
-      // Pick random operator (+, -, ×)
-      const op = operators[Math.floor(Math.random() * operators.length)];
-      ops.push(op);
-    }
-
-    // Calculate answer safely using basic math
-    let expr = `${nums[0]}`;
-    let result = nums[0];
-
-    for (let i = 0; i < ops.length; i++) {
-      const op = ops[i];
-      const nextNum = nums[i + 1];
-
+    if (numOperands === 2) {
+      // Level 1: 2 operands
+      const op = ["+", "-", "×"][Math.floor(Math.random() * 3)];
       if (op === "+") {
-        result += nextNum;
-        expr += ` + ${nextNum}`;
+        const a = Math.floor(Math.random() * 15) + 2;
+        const b = Math.floor(Math.random() * 15) + 2;
+        return { expression: `${a} + ${b}`, answer: a + b, level };
       } else if (op === "-") {
-        // Prevent negative answers by swapping if needed
-        if (result < nextNum) {
-          result += nextNum + 3;
-          expr = `${result - nextNum} + ${nextNum} - ${nextNum}`; // Keep result non-negative
-        } else {
-          result -= nextNum;
-          expr += ` - ${nextNum}`;
-        }
-      } else if (op === "×") {
-        result *= nextNum;
-        expr += ` × ${nextNum}`;
+        const b = Math.floor(Math.random() * 12) + 2;
+        const a = b + Math.floor(Math.random() * 15) + 1; // a > b guaranteed!
+        return { expression: `${a} - ${b}`, answer: a - b, level };
+      } else {
+        const a = Math.floor(Math.random() * 9) + 2;
+        const b = Math.floor(Math.random() * 9) + 2;
+        return { expression: `${a} × ${b}`, answer: a * b, level };
+      }
+    } else if (numOperands === 3) {
+      // Level 2: 3 operands (e.g. 5 + 8 - 4 or 3 x 4 + 5)
+      const type = Math.floor(Math.random() * 3);
+      if (type === 0) {
+        // a + b - c
+        const a = Math.floor(Math.random() * 10) + 2;
+        const b = Math.floor(Math.random() * 10) + 2;
+        const c = Math.floor(Math.random() * (a + b - 1)) + 1; // c < (a + b)
+        return { expression: `${a} + ${b} - ${c}`, answer: a + b - c, level };
+      } else if (type === 1) {
+        // a × b + c
+        const a = Math.floor(Math.random() * 6) + 2;
+        const b = Math.floor(Math.random() * 6) + 2;
+        const c = Math.floor(Math.random() * 10) + 1;
+        return { expression: `${a} × ${b} + ${c}`, answer: a * b + c, level };
+      } else {
+        // a + b + c
+        const a = Math.floor(Math.random() * 10) + 2;
+        const b = Math.floor(Math.random() * 10) + 2;
+        const c = Math.floor(Math.random() * 10) + 2;
+        return { expression: `${a} + ${b} + ${c}`, answer: a + b + c, level };
+      }
+    } else {
+      // Level 3: 4 operands (e.g. 4 + 6 + 5 - 3 or 2 x 4 + 6 - 3)
+      const type = Math.floor(Math.random() * 3);
+      if (type === 0) {
+        // a + b + c - d
+        const a = Math.floor(Math.random() * 8) + 2;
+        const b = Math.floor(Math.random() * 8) + 2;
+        const c = Math.floor(Math.random() * 8) + 2;
+        const d = Math.floor(Math.random() * (a + b + c - 1)) + 1;
+        return { expression: `${a} + ${b} + ${c} - ${d}`, answer: a + b + c - d, level };
+      } else if (type === 1) {
+        // a × b + c - d
+        const a = Math.floor(Math.random() * 5) + 2;
+        const b = Math.floor(Math.random() * 5) + 2;
+        const c = Math.floor(Math.random() * 8) + 2;
+        const d = Math.floor(Math.random() * (a * b + c - 1)) + 1;
+        return { expression: `${a} × ${b} + ${c} - ${d}`, answer: a * b + c - d, level };
+      } else {
+        // a + b + c + d
+        const a = Math.floor(Math.random() * 8) + 2;
+        const b = Math.floor(Math.random() * 8) + 2;
+        const c = Math.floor(Math.random() * 8) + 2;
+        const d = Math.floor(Math.random() * 8) + 2;
+        return { expression: `${a} + ${b} + ${c} + ${d}`, answer: a + b + c + d, level };
       }
     }
-
-    return {
-      expression: expr,
-      answer: result,
-      level,
-    };
   }, []);
 
   const handleStart = () => {
