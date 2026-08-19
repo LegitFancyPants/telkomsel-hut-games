@@ -4,8 +4,9 @@
   "description": "Platform Web Game Pos-to-Pos (QR & PIN-Gated Multi-Pos System)",
   "main": "index.js",
   "scripts": {
+    "postinstall": "prisma generate",
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint"
   },
