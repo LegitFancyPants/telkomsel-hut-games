@@ -1,31 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Clock, Calculator, Trophy, Check, Delete } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Clock, Trophy, Calculator, CheckCircle2, Delete, Zap, Award } from "lucide-react";
 import { formatTime } from "@/lib/utils";
 
 interface SpeedMathGameProps {
   postName: string;
   groupName: string;
-  timeLimit: number;
+  timeLimit: number; // 120 seconds (2 minutes)
   onSubmitMathScore: (score: number) => void;
   isSubmitting: boolean;
 }
 
-interface MathProblem {
-  num1: number;
-  num2: number;
-  op: "+" | "-";
+interface GeneratedMathProblem {
+  expression: string;
   answer: number;
+  level: number;
 }
-
-const PROBLEMS: MathProblem[] = [
-  { num1: 15, num2: 27, op: "+", answer: 42 },
-  { num1: 64, num2: 18, op: "-", answer: 46 },
-  { num1: 32, num2: 45, op: "+", answer: 77 },
-  { num1: 90, num2: 37, op: "-", answer: 53 },
-  { num1: 28, num2: 34, op: "+", answer: 62 },
-];
 
 export default function SpeedMathGame({
   postName,
@@ -34,26 +25,94 @@ export default function SpeedMathGame({
   onSubmitMathScore,
   isSubmitting,
 }: SpeedMathGameProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [userInput, setUserInput] = useState("");
-  const [correctCount, setCorrectCount] = useState(0);
+  const [solvedCount, setSolvedCount] = useState<number>(0);
+  const [streakCount, setStreakCount] = useState<number>(0);
+  const [totalScore, setTotalScore] = useState<number>(0);
+  const [userAnswer, setUserAnswer] = useState<string>("");
+  const [problem, setProblem] = useState<GeneratedMathProblem | null>(null);
   const [gameState, setGameState] = useState<"IDLE" | "PLAYING" | "FINISHED">("IDLE");
-  const [timeLeft, setTimeLeft] = useState<number>(timeLimit || 45);
+  const [timeLeft, setTimeLeft] = useState<number>(timeLimit || 120); // Default 2 Menit (120s)
+  const [feedback, setFeedback] = useState<"CORRECT" | "WRONG" | null>(null);
 
-  const currentProblem = PROBLEMS[currentIndex];
+  // Dynamic Math Problem Generator with Progressive Length
+  const generateProblem = useCallback((currentSolved: number): GeneratedMathProblem => {
+    // Level 1 (0-5 soal): 2 operands (e.g. 8 + 6)
+    // Level 2 (6-12 soal): 3 operands (e.g. 5 + 4 - 2)
+    // Level 3 (13+ soal): 4 operands (e.g. 6 + 3 + 5 - 4)
+    let level = 1;
+    let numOperands = 2;
+
+    if (currentSolved >= 13) {
+      level = 3;
+      numOperands = 4;
+    } else if (currentSolved >= 6) {
+      level = 2;
+      numOperands = 3;
+    }
+
+    const operators = ["+", "-", "×"];
+    let nums: number[] = [];
+    let ops: string[] = [];
+
+    // Generate random numbers (small basic arithmetic)
+    for (let i = 0; i < numOperands; i++) {
+      nums.push(Math.floor(Math.random() * 12) + 2); // 2 to 13
+    }
+
+    for (let i = 0; i < numOperands - 1; i++) {
+      // Pick random operator (+, -, ×)
+      const op = operators[Math.floor(Math.random() * operators.length)];
+      ops.push(op);
+    }
+
+    // Calculate answer safely using basic math
+    let expr = `${nums[0]}`;
+    let result = nums[0];
+
+    for (let i = 0; i < ops.length; i++) {
+      const op = ops[i];
+      const nextNum = nums[i + 1];
+
+      if (op === "+") {
+        result += nextNum;
+        expr += ` + ${nextNum}`;
+      } else if (op === "-") {
+        // Prevent negative answers by swapping if needed
+        if (result < nextNum) {
+          result += nextNum + 3;
+          expr = `${result - nextNum} + ${nextNum} - ${nextNum}`; // Keep result non-negative
+        } else {
+          result -= nextNum;
+          expr += ` - ${nextNum}`;
+        }
+      } else if (op === "×") {
+        result *= nextNum;
+        expr += ` × ${nextNum}`;
+      }
+    }
+
+    return {
+      expression: expr,
+      answer: result,
+      level,
+    };
+  }, []);
 
   const handleStart = () => {
-    setCurrentIndex(0);
-    setUserInput("");
-    setCorrectCount(0);
-    setTimeLeft(timeLimit || 45);
+    setSolvedCount(0);
+    setStreakCount(0);
+    setTotalScore(0);
+    setUserAnswer("");
+    setTimeLeft(timeLimit || 120);
+    setProblem(generateProblem(0));
     setGameState("PLAYING");
   };
 
+  // Timer Effect (2 Minutes = 120 Seconds)
   useEffect(() => {
     if (gameState !== "PLAYING") return;
 
-    if (timeLeft <= 0 || currentIndex >= PROBLEMS.length) {
+    if (timeLeft <= 0) {
       setGameState("FINISHED");
       return;
     }
@@ -63,39 +122,55 @@ export default function SpeedMathGame({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [gameState, timeLeft, currentIndex]);
+  }, [gameState, timeLeft]);
 
-  const handleNumClick = (val: string) => {
-    if (userInput.length < 3) {
-      setUserInput((prev) => prev + val);
-    }
+  // Keypad press handler
+  const handleKeyClick = (numStr: string) => {
+    if (gameState !== "PLAYING") return;
+    if (userAnswer.length >= 5) return;
+    setUserAnswer((prev) => prev + numStr);
   };
 
   const handleBackspace = () => {
-    setUserInput((prev) => prev.slice(0, -1));
+    setUserAnswer((prev) => prev.slice(0, -1));
   };
 
-  const handleSubmitAnswer = () => {
-    if (!currentProblem || !userInput) return;
+  const handleCheckAnswer = () => {
+    if (!problem || !userAnswer || gameState !== "PLAYING") return;
 
-    if (parseInt(userInput, 10) === currentProblem.answer) {
-      setCorrectCount((prev) => prev + 1);
-    }
+    const numericAnswer = Number(userAnswer);
 
-    setUserInput("");
-    if (currentIndex < PROBLEMS.length - 1) {
-      setCurrentIndex((prev) => prev + 1);
+    if (numericAnswer === problem.answer) {
+      // Correct!
+      const newSolved = solvedCount + 1;
+      const newStreak = streakCount + 1;
+      const basePoints = 20; // 20 PTS per correct math
+      const streakBonus = newStreak % 5 === 0 ? 50 : 0; // Bonus +50 PTS every 5 streak!
+
+      setSolvedCount(newSolved);
+      setStreakCount(newStreak);
+      setTotalScore((prev) => prev + basePoints + streakBonus);
+
+      setFeedback("CORRECT");
+      setTimeout(() => setFeedback(null), 300);
+
+      setUserAnswer("");
+      setProblem(generateProblem(newSolved));
     } else {
-      setGameState("FINISHED");
+      // Wrong
+      setStreakCount(0);
+      setFeedback("WRONG");
+      setTimeout(() => setFeedback(null), 300);
+      setUserAnswer("");
     }
   };
 
-  const calculateScore = () => {
-    return Math.min(100, correctCount * 20);
+  const handleFinishSubmit = () => {
+    onSubmitMathScore(totalScore);
   };
 
   return (
-    <div className="w-full max-w-sm mx-auto p-4 sm:p-6 bg-slate-900/90 border border-slate-800 rounded-2xl shadow-2xl backdrop-blur-sm text-slate-100 flex flex-col items-center">
+    <div className="w-full max-w-sm mx-auto p-4 sm:p-6 bg-slate-900/90 border border-slate-800 rounded-2xl shadow-2xl backdrop-blur-sm text-slate-100 flex flex-col items-center select-none">
       {/* Header */}
       <div className="w-full flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
         <h2 className="text-xs font-bold tracking-wider text-slate-200 uppercase truncate">
@@ -110,10 +185,10 @@ export default function SpeedMathGame({
             <Calculator className="w-8 h-8 text-emerald-400" />
           </div>
           <h3 className="text-base font-bold text-slate-100 uppercase mb-2">
-            SPEED MATH CHALLENGE
+            SPEED MATH CHALLENGE (2 MENIT)
           </h3>
-          <p className="text-xs text-slate-400 leading-relaxed mb-6 max-w-xs">
-            Selesaikan soal matematika sederhana secepat mungkin dalam waktu {timeLimit} detik!
+          <p className="text-xs text-slate-400 leading-relaxed mb-4 max-w-xs">
+            Kerjakan soal aritmatika sebanyak-banyaknya dalam waktu <span className="font-bold text-sky-400">2 Menit</span>! Soal akan terus bertambah panjang seiring banyaknya soal yang berhasil diselesaikan.
           </p>
 
           <button
@@ -121,74 +196,94 @@ export default function SpeedMathGame({
             onClick={handleStart}
             className="touch-btn w-full font-bold uppercase tracking-wider text-sm bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-lg transition-all"
           >
-            MULAI HITUNG CEPAT
+            MULAI HITUNG CEPAT (2 MENIT)
           </button>
         </div>
       )}
 
-      {gameState === "PLAYING" && currentProblem && (
+      {gameState === "PLAYING" && problem && (
         <div className="w-full flex flex-col items-center">
           {/* Header Bar */}
-          <div className="w-full flex items-center justify-between px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl mb-4">
-            <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-emerald-400">
+          <div className="w-full flex items-center justify-between px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl mb-3">
+            <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-sky-400">
               <Clock className="w-3.5 h-3.5" />
               <span>{formatTime(timeLeft)}</span>
             </div>
-            <div className="text-xs font-bold text-slate-300">
-              SOAL <span className="font-mono text-sky-400">{currentIndex + 1}/{PROBLEMS.length}</span>
+
+            <div className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-950 border border-emerald-800 text-emerald-300">
+              TINGKAT {problem.level} ({problem.level === 1 ? "2 Angka" : problem.level === 2 ? "3 Angka" : "4 Angka"})
+            </div>
+
+            <div className="text-xs font-mono font-bold text-amber-400">
+              {totalScore} PTS
             </div>
           </div>
 
-          {/* Problem Display Card */}
-          <div className="w-full py-5 px-4 bg-slate-950 border border-slate-800 rounded-2xl text-center mb-4 shadow-inner">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1">
-              BERAPAKAH HASIL DARI:
-            </span>
-            <h3 className="text-3xl font-black font-mono tracking-widest text-slate-100">
-              {currentProblem.num1} {currentProblem.op} {currentProblem.num2} = ?
-            </h3>
-          </div>
-
-          {/* Input Box */}
-          <div className="w-full h-12 bg-slate-950 border-2 border-emerald-500/80 rounded-xl flex items-center justify-center mb-4">
-            <span className="font-mono font-black text-2xl text-emerald-400 tracking-widest">
-              {userInput || "_"}
+          {/* Stats Bar */}
+          <div className="w-full flex items-center justify-between px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg mb-3 text-xs">
+            <span className="text-slate-400">Terjawab: <strong className="text-slate-200 font-mono">{solvedCount} Soal</strong></span>
+            <span className="text-slate-400 flex items-center gap-1">
+              <Zap className="w-3 h-3 text-amber-400 fill-amber-400" />
+              Streak: <strong className="text-amber-400 font-mono">{streakCount}x</strong>
             </span>
           </div>
 
-          {/* Keypad */}
+          {/* Math Problem Card Display */}
+          <div
+            className={`w-full p-6 mb-4 bg-slate-950 border-2 rounded-2xl text-center shadow-inner flex flex-col items-center transition-all ${
+              feedback === "CORRECT"
+                ? "border-emerald-500 bg-emerald-950/40"
+                : feedback === "WRONG"
+                ? "border-red-500 bg-red-950/40"
+                : "border-slate-800"
+            }`}
+          >
+            <div className="text-2xl sm:text-3xl font-extrabold font-mono tracking-wider text-slate-100 mb-3">
+              {problem.expression} = ?
+            </div>
+
+            <div className="w-full max-w-[180px] h-11 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-center font-mono font-black text-xl text-emerald-400 tracking-widest shadow-inner">
+              {userAnswer || <span className="text-slate-700 text-sm font-sans font-normal">Input Jawaban</span>}
+            </div>
+          </div>
+
+          {/* Numeric Keypad (0-9, Backspace, Submit) */}
           <div className="w-full grid grid-cols-3 gap-2 mb-4">
             {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((num) => (
               <button
                 key={num}
                 type="button"
-                onClick={() => handleNumClick(num)}
-                className="touch-btn text-lg font-bold bg-slate-950 border border-slate-800 hover:bg-slate-800 rounded-xl flex items-center justify-center transition-all"
+                onClick={() => handleKeyClick(num)}
+                className="h-12 rounded-xl bg-slate-950 border border-slate-800 active:bg-slate-800 text-slate-100 font-mono font-bold text-lg flex items-center justify-center touch-manipulation shadow-md"
               >
                 {num}
               </button>
             ))}
+
             <button
               type="button"
               onClick={handleBackspace}
-              className="touch-btn bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-400 rounded-xl flex items-center justify-center"
+              className="h-12 rounded-xl bg-slate-950 border border-slate-800 active:bg-slate-800 text-red-400 font-bold flex items-center justify-center touch-manipulation shadow-md"
+              title="Hapus"
             >
               <Delete className="w-5 h-5" />
             </button>
+
             <button
               type="button"
-              onClick={() => handleNumClick("0")}
-              className="touch-btn text-lg font-bold bg-slate-950 border border-slate-800 hover:bg-slate-800 rounded-xl flex items-center justify-center"
+              onClick={() => handleKeyClick("0")}
+              className="h-12 rounded-xl bg-slate-950 border border-slate-800 active:bg-slate-800 text-slate-100 font-mono font-bold text-lg flex items-center justify-center touch-manipulation shadow-md"
             >
               0
             </button>
+
             <button
               type="button"
-              onClick={handleSubmitAnswer}
-              disabled={!userInput}
-              className="touch-btn bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl flex items-center justify-center disabled:opacity-40"
+              onClick={handleCheckAnswer}
+              disabled={!userAnswer}
+              className="h-12 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 disabled:opacity-40 text-white font-extrabold text-xs uppercase flex items-center justify-center touch-manipulation shadow-lg tracking-wider"
             >
-              <Check className="w-6 h-6 stroke-[3]" />
+              JAWAB
             </button>
           </div>
         </div>
@@ -200,19 +295,25 @@ export default function SpeedMathGame({
             <Trophy className="w-7 h-7 text-emerald-400" />
           </div>
           <h3 className="text-base font-bold text-slate-100 uppercase mb-1">
-            PERMAINAN SELESAI!
+            WAKTU 2 MENIT HABIS!
           </h3>
-          <p className="text-xs text-slate-400 mb-4">
-            Soal Benar: <span className="font-bold text-slate-200">{correctCount}/{PROBLEMS.length}</span> | Poin Diperoleh: <span className="font-bold text-emerald-400">{calculateScore()} Poin</span>
+          <p className="text-xs text-slate-400 mb-1">
+            Soal Terjawab: <span className="font-bold text-slate-200">{solvedCount} Soal</span>
+          </p>
+          <p className="text-sm font-extrabold text-amber-400 mb-4">
+            Total Poin Diperoleh: +{totalScore} PTS
+          </p>
+          <p className="text-[11px] text-slate-500 mb-4 leading-relaxed">
+            Poin ini akan otomatis diakumulasikan ke total skor {groupName}.
           </p>
 
           <button
             type="button"
-            onClick={() => onSubmitMathScore(calculateScore())}
+            onClick={handleFinishSubmit}
             disabled={isSubmitting}
             className="touch-btn w-full font-bold uppercase tracking-wider text-sm bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-lg transition-all"
           >
-            {isSubmitting ? "MEMPROSES..." : "SUBMIT SKOR POS"}
+            {isSubmitting ? "MEMPROSES..." : "SUBMIT SKOR KE KELOMPOK"}
           </button>
         </div>
       )}

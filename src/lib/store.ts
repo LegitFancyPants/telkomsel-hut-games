@@ -49,7 +49,7 @@ let memoryPosts: PostData[] = [
   { id: 1, name: "POS 1: GERBANG UTAMA", slug: "pos-1", pinCode: "4829", gameType: "quiz", timeLimit: 60, isActive: true },
   { id: 2, name: "POS 2: AREA KETANGKASAN", slug: "pos-2", pinCode: "1357", gameType: "quiz", timeLimit: 60, isActive: true },
   { id: 3, name: "POS 3: TAMAN WAWASAN", slug: "pos-3", pinCode: "2468", gameType: "memory_match", timeLimit: 300, isActive: true },
-  { id: 4, name: "POS 4: LABIRIN STRATEGI", slug: "pos-4", pinCode: "9876", gameType: "speed_math", timeLimit: 45, isActive: true },
+  { id: 4, name: "POS 4: LABIRIN STRATEGI", slug: "pos-4", pinCode: "9876", gameType: "speed_math", timeLimit: 120, isActive: true },
   { id: 5, name: "POS 5: TANTANGAN ULAR", slug: "pos-5", pinCode: "5555", gameType: "snake", timeLimit: 300, isActive: true },
 ];
 
