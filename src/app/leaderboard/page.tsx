@@ -5,8 +5,7 @@ import Navbar from "@/components/Navbar";
 import LeaderboardTable from "@/components/leaderboard/LeaderboardTable";
 import PodiumTop3 from "@/components/leaderboard/PodiumTop3";
 import { GroupData } from "@/lib/store";
-import { RefreshCw, Radio, Tv } from "lucide-react";
-import Link from "next/link";
+import { RefreshCw, Radio } from "lucide-react";
 
 export default function LeaderboardPage() {
   const [groups, setGroups] = useState<GroupData[]>([]);
@@ -87,14 +86,6 @@ export default function LeaderboardPage() {
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Refresh</span>
             </button>
-
-            <Link
-              href="/projector"
-              className="px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-xs font-bold text-white flex items-center gap-1.5 shadow-lg shadow-sky-950 transition-all"
-            >
-              <Tv className="w-3.5 h-3.5" />
-              <span>Mode Proyektor</span>
-            </Link>
           </div>
         </div>
 

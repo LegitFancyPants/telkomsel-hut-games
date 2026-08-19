@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Shield, Trophy, Tv } from "lucide-react";
+import { Shield, Trophy } from "lucide-react";
 
 export default function Navbar() {
   return (
@@ -21,13 +21,6 @@ export default function Navbar() {
           >
             <Trophy className="w-3.5 h-3.5 text-sky-400" />
             <span>Leaderboard</span>
-          </Link>
-          <Link
-            href="/projector"
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-slate-800 transition-colors text-slate-300 hover:text-white"
-          >
-            <Tv className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Proyektor</span>
           </Link>
           <Link
             href="/admin/login"
