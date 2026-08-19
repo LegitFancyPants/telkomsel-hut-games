@@ -36,7 +36,7 @@ export interface ScoreLogData {
   createdAt: Date;
 }
 
-// In-Memory Fallback Store
+// In-Memory Fallback & Seed Data
 let memoryGroups: GroupData[] = [
   { id: 1, name: "Kelompok 1 - Garuda", totalScore: 120, updatedAt: new Date() },
   { id: 2, name: "Kelompok 2 - Elang", totalScore: 180, updatedAt: new Date() },
@@ -63,9 +63,64 @@ let memoryQuestions: QuestionData[] = [
 
 const memoryScoreLogs: ScoreLogData[] = [];
 
+// Seed helper for Neon DB initialization
+async function ensureDbSeeded() {
+  try {
+    const postCount = await prisma.post.count();
+    if (postCount === 0) {
+      for (const p of memoryPosts) {
+        await prisma.post.create({
+          data: {
+            id: p.id,
+            name: p.name,
+            slug: p.slug,
+            pinCode: p.pinCode,
+            gameType: p.gameType,
+            timeLimit: p.timeLimit,
+            isActive: p.isActive,
+          },
+        });
+      }
+    }
+
+    const groupCount = await prisma.group.count();
+    if (groupCount === 0) {
+      for (const g of memoryGroups) {
+        await prisma.group.create({
+          data: {
+            id: g.id,
+            name: g.name,
+            totalScore: g.totalScore,
+          },
+        });
+      }
+    }
+
+    const questionCount = await prisma.question.count();
+    if (questionCount === 0) {
+      for (const q of memoryQuestions) {
+        await prisma.question.create({
+          data: {
+            id: q.id,
+            postId: q.postId,
+            promptText: q.promptText,
+            imageUrl: q.imageUrl || null,
+            options: JSON.stringify(q.options),
+            correctOpt: q.correctOpt,
+            points: q.points,
+          },
+        });
+      }
+    }
+  } catch (e) {
+    console.error("Db Seed Warning:", e);
+  }
+}
+
 // Posts CRUD
 export async function getPosts(): Promise<PostData[]> {
   try {
+    await ensureDbSeeded();
     const posts = await prisma.post.findMany({ orderBy: { id: "asc" } });
     if (posts.length > 0) {
       return posts.map((p: any) => ({
@@ -79,13 +134,14 @@ export async function getPosts(): Promise<PostData[]> {
       }));
     }
   } catch (e) {
-    // fallback
+    console.error("getPosts Error:", e);
   }
   return memoryPosts;
 }
 
 export async function getPostBySlug(slug: string): Promise<PostData | null> {
   try {
+    await ensureDbSeeded();
     const post = await prisma.post.findUnique({ where: { slug } });
     if (post) {
       return {
@@ -99,7 +155,7 @@ export async function getPostBySlug(slug: string): Promise<PostData | null> {
       };
     }
   } catch (e) {
-    // fallback
+    console.error("getPostBySlug Error:", e);
   }
   return memoryPosts.find((p: PostData) => p.slug === slug) || null;
 }
@@ -126,7 +182,7 @@ export async function createPost(data: Omit<PostData, "id">): Promise<PostData> 
       isActive: created.isActive,
     };
   } catch (e) {
-    // fallback
+    console.error("createPost Error:", e);
   }
   const newPost: PostData = { id: memoryPosts.length + 1, ...data };
   memoryPosts.push(newPost);
@@ -135,10 +191,47 @@ export async function createPost(data: Omit<PostData, "id">): Promise<PostData> 
 
 export async function updatePost(id: number, data: Partial<PostData>): Promise<PostData | null> {
   try {
-    const updated = await prisma.post.update({
-      where: { id },
-      data,
-    });
+    await ensureDbSeeded();
+    
+    // Check if post exists in DB first to do upsert or update
+    const existing = await prisma.post.findUnique({ where: { id } });
+
+    let updated: any;
+    if (existing) {
+      updated = await prisma.post.update({
+        where: { id },
+        data,
+      });
+    } else {
+      updated = await prisma.post.create({
+        data: {
+          id,
+          name: data.name || `POS #${id}`,
+          slug: data.slug || `pos-${id}`,
+          pinCode: data.pinCode || "1234",
+          gameType: (data.gameType as any) || "quiz",
+          timeLimit: data.timeLimit || 60,
+          isActive: data.isActive !== undefined ? data.isActive : true,
+        },
+      });
+    }
+
+    // Sync memory state
+    const idx = memoryPosts.findIndex((p) => p.id === id);
+    if (idx !== -1) {
+      memoryPosts[idx] = { ...memoryPosts[idx], ...data };
+    } else {
+      memoryPosts.push({
+        id: updated.id,
+        name: updated.name,
+        slug: updated.slug,
+        pinCode: updated.pinCode,
+        gameType: updated.gameType as any,
+        timeLimit: updated.timeLimit,
+        isActive: updated.isActive,
+      });
+    }
+
     return {
       id: updated.id,
       name: updated.name,
@@ -149,8 +242,9 @@ export async function updatePost(id: number, data: Partial<PostData>): Promise<P
       isActive: updated.isActive,
     };
   } catch (e) {
-    // fallback
+    console.error("updatePost Error:", e);
   }
+
   const idx = memoryPosts.findIndex((p) => p.id === id);
   if (idx !== -1) {
     memoryPosts[idx] = { ...memoryPosts[idx], ...data };
@@ -162,9 +256,10 @@ export async function updatePost(id: number, data: Partial<PostData>): Promise<P
 export async function deletePost(id: number): Promise<boolean> {
   try {
     await prisma.post.delete({ where: { id } });
+    memoryPosts = memoryPosts.filter((p) => p.id !== id);
     return true;
   } catch (e) {
-    // fallback
+    console.error("deletePost Error:", e);
   }
   memoryPosts = memoryPosts.filter((p) => p.id !== id);
   return true;
@@ -173,20 +268,22 @@ export async function deletePost(id: number): Promise<boolean> {
 // Groups CRUD
 export async function getGroups(): Promise<GroupData[]> {
   try {
+    await ensureDbSeeded();
     const groups = await prisma.group.findMany({ orderBy: { totalScore: "desc" } });
     if (groups.length > 0) return groups;
   } catch (e) {
-    // fallback
+    console.error("getGroups Error:", e);
   }
   return [...memoryGroups].sort((a, b) => b.totalScore - a.totalScore);
 }
 
 export async function getGroupById(id: number): Promise<GroupData | null> {
   try {
+    await ensureDbSeeded();
     const group = await prisma.group.findUnique({ where: { id } });
     if (group) return group;
   } catch (e) {
-    // fallback
+    console.error("getGroupById Error:", e);
   }
   return memoryGroups.find((g: GroupData) => g.id === id) || null;
 }
@@ -198,7 +295,7 @@ export async function createGroup(name: string): Promise<GroupData> {
     });
     return created;
   } catch (e) {
-    // fallback
+    console.error("createGroup Error:", e);
   }
   const newGroup: GroupData = { id: memoryGroups.length + 1, name, totalScore: 0, updatedAt: new Date() };
   memoryGroups.push(newGroup);
@@ -207,17 +304,39 @@ export async function createGroup(name: string): Promise<GroupData> {
 
 export async function updateGroup(id: number, name?: string, scoreOverride?: number): Promise<GroupData | null> {
   try {
+    await ensureDbSeeded();
     const updatePayload: any = {};
     if (name !== undefined) updatePayload.name = name;
     if (scoreOverride !== undefined) updatePayload.totalScore = scoreOverride;
 
-    const updated = await prisma.group.update({
-      where: { id },
-      data: updatePayload,
-    });
+    const existing = await prisma.group.findUnique({ where: { id } });
+    let updated: any;
+
+    if (existing) {
+      updated = await prisma.group.update({
+        where: { id },
+        data: updatePayload,
+      });
+    } else {
+      updated = await prisma.group.create({
+        data: {
+          id,
+          name: name || `Kelompok #${id}`,
+          totalScore: scoreOverride !== undefined ? scoreOverride : 0,
+        },
+      });
+    }
+
+    const idx = memoryGroups.findIndex((g) => g.id === id);
+    if (idx !== -1) {
+      if (name !== undefined) memoryGroups[idx].name = name;
+      if (scoreOverride !== undefined) memoryGroups[idx].totalScore = scoreOverride;
+      memoryGroups[idx].updatedAt = new Date();
+    }
+
     return updated;
   } catch (e) {
-    // fallback
+    console.error("updateGroup Error:", e);
   }
   const idx = memoryGroups.findIndex((g) => g.id === id);
   if (idx !== -1) {
@@ -232,9 +351,10 @@ export async function updateGroup(id: number, name?: string, scoreOverride?: num
 export async function deleteGroup(id: number): Promise<boolean> {
   try {
     await prisma.group.delete({ where: { id } });
+    memoryGroups = memoryGroups.filter((g) => g.id !== id);
     return true;
   } catch (e) {
-    // fallback
+    console.error("deleteGroup Error:", e);
   }
   memoryGroups = memoryGroups.filter((g) => g.id !== id);
   return true;
@@ -243,9 +363,10 @@ export async function deleteGroup(id: number): Promise<boolean> {
 export async function resetAllScores(): Promise<boolean> {
   try {
     await prisma.group.updateMany({ data: { totalScore: 0 } });
+    memoryGroups.forEach((g) => (g.totalScore = 0));
     return true;
   } catch (e) {
-    // fallback
+    console.error("resetAllScores Error:", e);
   }
   memoryGroups.forEach((g) => (g.totalScore = 0));
   return true;
@@ -254,6 +375,7 @@ export async function resetAllScores(): Promise<boolean> {
 // Questions CRUD
 export async function getQuestionsByPostId(postId: number): Promise<QuestionData[]> {
   try {
+    await ensureDbSeeded();
     const questions = await prisma.question.findMany({ where: { postId }, orderBy: { id: "asc" } });
     if (questions.length > 0) {
       return questions.map((q: any) => ({
@@ -267,7 +389,7 @@ export async function getQuestionsByPostId(postId: number): Promise<QuestionData
       }));
     }
   } catch (e) {
-    // fallback
+    console.error("getQuestionsByPostId Error:", e);
   }
   return memoryQuestions.filter((q: QuestionData) => q.postId === postId);
 }
@@ -294,7 +416,7 @@ export async function createQuestion(data: Omit<QuestionData, "id">): Promise<Qu
       points: created.points,
     };
   } catch (e) {
-    // fallback
+    console.error("createQuestion Error:", e);
   }
   const newQ: QuestionData = { id: memoryQuestions.length + 1, ...data };
   memoryQuestions.push(newQ);
@@ -304,9 +426,10 @@ export async function createQuestion(data: Omit<QuestionData, "id">): Promise<Qu
 export async function deleteQuestion(id: number): Promise<boolean> {
   try {
     await prisma.question.delete({ where: { id } });
+    memoryQuestions = memoryQuestions.filter((q) => q.id !== id);
     return true;
   } catch (e) {
-    // fallback
+    console.error("deleteQuestion Error:", e);
   }
   memoryQuestions = memoryQuestions.filter((q) => q.id !== id);
   return true;
@@ -319,6 +442,7 @@ export async function submitScore(
   deviceToken: string
 ): Promise<{ success: boolean; newTotalScore: number; pointsEarned: number }> {
   try {
+    await ensureDbSeeded();
     const updatedGroup = await prisma.$transaction(async (tx: any) => {
       const recentLog = await tx.scoreLog.findFirst({
         where: {
@@ -362,6 +486,7 @@ export async function submitScore(
     if (e.message?.includes("5 menit terakhir")) {
       throw e;
     }
+    console.error("submitScore Error:", e);
     const group = memoryGroups.find((g: GroupData) => g.id === groupId);
     if (group) {
       group.totalScore += pointsEarned;
