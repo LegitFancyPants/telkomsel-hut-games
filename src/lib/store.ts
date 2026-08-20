@@ -22,6 +22,7 @@ export interface QuestionData {
   postId: number;
   promptText: string;
   imageUrl?: string | null;
+  audioUrl?: string | null;
   options: string[];
   correctOpt: string;
   points: number;
@@ -54,19 +55,19 @@ let memoryPosts: PostData[] = [
 ];
 
 let memoryQuestions: QuestionData[] = [
-  // POS 1 Questions
-  { id: 1, postId: 1, promptText: "TEBAK GAMBAR: Bangunan apakah yang ada pada gambar di bawah ini?", imageUrl: "https://images.unsplash.com/photo-1596402184320-417e7178b2cd?w=600&auto=format&fit=crop&q=80", options: ["Monumen Nasional (Monas)", "Candi Borobudur", "Gedung Sate", "Jam Gadang"], correctOpt: "A", points: 20 },
-  { id: 2, postId: 1, promptText: "TEBAK GAMBAR: Burung apakah yang menjadi lambang garuda dalam gambar ini?", imageUrl: "https://images.unsplash.com/photo-1611689342806-0863700ce1e4?w=600&auto=format&fit=crop&q=80", options: ["Burung Elang Jawa", "Burung Merpati", "Burung Cenderawasih", "Burung Kakaktua"], correctOpt: "A", points: 20 },
-  { id: 3, postId: 1, promptText: "Berapa jumlah warna utama dalam pelangi dasar?", imageUrl: null, options: ["3 Warna", "5 Warna", "7 Warna", "9 Warna"], correctOpt: "C", points: 20 },
-  { id: 4, postId: 1, promptText: "Apa nama ibukota Indonesia yang baru di Kalimantan?", imageUrl: null, options: ["Nusantara", "Ibu Kota Baru", "Penajam", "Balikpapan"], correctOpt: "A", points: 20 },
-  { id: 5, postId: 1, promptText: "Berapa jumlah roda pada becak motor konvensional?", imageUrl: null, options: ["2 Roda", "3 Roda", "4 Roda", "5 Roda"], correctOpt: "B", points: 20 },
+  // POS 1 Questions (Includes Tebak Gambar & Tebak Lagu)
+  { id: 1, postId: 1, promptText: "TEBAK GAMBAR: Bangunan apakah yang ada pada gambar di bawah ini?", imageUrl: "https://images.unsplash.com/photo-1596402184320-417e7178b2cd?w=600&auto=format&fit=crop&q=80", audioUrl: null, options: ["Monumen Nasional (Monas)", "Candi Borobudur", "Gedung Sate", "Jam Gadang"], correctOpt: "A", points: 20 },
+  { id: 2, postId: 1, promptText: "TEBAK GAMBAR: Burung apakah yang menjadi lambang garuda dalam gambar ini?", imageUrl: "https://images.unsplash.com/photo-1611689342806-0863700ce1e4?w=600&auto=format&fit=crop&q=80", audioUrl: null, options: ["Burung Elang Jawa", "Burung Merpati", "Burung Cenderawasih", "Burung Kakaktua"], correctOpt: "A", points: 20 },
+  { id: 3, postId: 1, promptText: "TEBAK LAGU: Dengarkan potongan lagu berikut! Judul lagu nasional apakah ini?", imageUrl: null, audioUrl: "https://actions.google.com/sounds/v1/ambiences/outdoor_park.ogg", options: ["Indonesia Raya", "Bagimu Negeri", "Garuda Pancasila", "Rayuan Pulau Kelapa"], correctOpt: "A", points: 20 },
+  { id: 4, postId: 1, promptText: "Apa nama ibukota Indonesia yang baru di Kalimantan?", imageUrl: null, audioUrl: null, options: ["Nusantara", "Ibu Kota Baru", "Penajam", "Balikpapan"], correctOpt: "A", points: 20 },
+  { id: 5, postId: 1, promptText: "Berapa jumlah roda pada becak motor konvensional?", imageUrl: null, audioUrl: null, options: ["2 Roda", "3 Roda", "4 Roda", "5 Roda"], correctOpt: "B", points: 20 },
 
   // POS 2 Questions
-  { id: 6, postId: 2, promptText: "Siapakah pencipta lagu kebangsaan Indonesia Raya?", imageUrl: null, options: ["W.R. Supratman", "Ismail Marzuki", "C. Simanjuntak", "Kusbini"], correctOpt: "A", points: 20 },
-  { id: 7, postId: 2, promptText: "Tanggal berapakah Proklamasi Kemerdekaan Republik Indonesia diperingati?", imageUrl: null, options: ["17 Agustus 1945", "10 November 1945", "28 Oktober 1928", "1 Juni 1945"], correctOpt: "A", points: 20 },
-  { id: 8, postId: 2, promptText: "Provinsi apakah yang merupakan terluas di Indonesia?", imageUrl: null, options: ["Papua", "Kalimantan Timur", "Sumatera Utara", "Jawa Barat"], correctOpt: "A", points: 20 },
-  { id: 9, postId: 2, promptText: "Hewan langka khas endemik Pulau Komodo di Nusa Tenggara Timur adalah...", imageUrl: null, options: ["Komodo", "Badak Bercula Satu", "Anoa", "Orangutan"], correctOpt: "A", points: 20 },
-  { id: 10, postId: 2, promptText: "Lautan terluas di dunia adalah...", imageUrl: null, options: ["Samudra Pasifik", "Samudra Atlantik", "Samudra Hindia", "Samudra Arktik"], correctOpt: "A", points: 20 },
+  { id: 6, postId: 2, promptText: "Siapakah pencipta lagu kebangsaan Indonesia Raya?", imageUrl: null, audioUrl: null, options: ["W.R. Supratman", "Ismail Marzuki", "C. Simanjuntak", "Kusbini"], correctOpt: "A", points: 20 },
+  { id: 7, postId: 2, promptText: "Tanggal berapakah Proklamasi Kemerdekaan Republik Indonesia diperingati?", imageUrl: null, audioUrl: null, options: ["17 Agustus 1945", "10 November 1945", "28 Oktober 1928", "1 Juni 1945"], correctOpt: "A", points: 20 },
+  { id: 8, postId: 2, promptText: "Provinsi apakah yang merupakan terluas di Indonesia?", imageUrl: null, audioUrl: null, options: ["Papua", "Kalimantan Timur", "Sumatera Utara", "Jawa Barat"], correctOpt: "A", points: 20 },
+  { id: 9, postId: 2, promptText: "Hewan langka khas endemik Pulau Komodo di Nusa Tenggara Timur adalah...", imageUrl: null, audioUrl: null, options: ["Komodo", "Badak Bercula Satu", "Anoa", "Orangutan"], correctOpt: "A", points: 20 },
+  { id: 10, postId: 2, promptText: "Lautan terluas di dunia adalah...", imageUrl: null, audioUrl: null, options: ["Samudra Pasifik", "Samudra Atlantik", "Samudra Hindia", "Samudra Arktik"], correctOpt: "A", points: 20 },
 ];
 
 const memoryScoreLogs: ScoreLogData[] = [];
@@ -114,6 +115,7 @@ async function ensureDbSeeded() {
               postId: q.postId,
               promptText: q.promptText,
               imageUrl: q.imageUrl || null,
+              audioUrl: q.audioUrl || null,
               options: JSON.stringify(q.options),
               correctOpt: q.correctOpt,
               points: q.points,
@@ -385,12 +387,12 @@ export async function getQuestionsByPostId(postId: number): Promise<QuestionData
   try {
     await ensureDbSeeded();
     const questions = await prisma.question.findMany({ where: { postId }, orderBy: { id: "asc" } });
-    // Always return database query result directly (even if empty []) so deleting all questions works!
     return questions.map((q: any) => ({
       id: q.id,
       postId: q.postId,
       promptText: q.promptText,
       imageUrl: q.imageUrl,
+      audioUrl: q.audioUrl,
       options: JSON.parse(q.options),
       correctOpt: q.correctOpt,
       points: q.points,
@@ -408,6 +410,7 @@ export async function createQuestion(data: Omit<QuestionData, "id">): Promise<Qu
         postId: data.postId,
         promptText: data.promptText,
         imageUrl: data.imageUrl || null,
+        audioUrl: data.audioUrl || null,
         options: JSON.stringify(data.options),
         correctOpt: data.correctOpt,
         points: data.points,
@@ -419,6 +422,7 @@ export async function createQuestion(data: Omit<QuestionData, "id">): Promise<Qu
       postId: created.postId,
       promptText: created.promptText,
       imageUrl: created.imageUrl,
+      audioUrl: created.audioUrl,
       options: JSON.parse(created.options),
       correctOpt: created.correctOpt,
       points: created.points,
@@ -439,6 +443,7 @@ export async function updateQuestion(id: number, data: Partial<QuestionData>): P
     const updatePayload: any = {};
     if (data.promptText !== undefined) updatePayload.promptText = data.promptText;
     if (data.imageUrl !== undefined) updatePayload.imageUrl = data.imageUrl;
+    if (data.audioUrl !== undefined) updatePayload.audioUrl = data.audioUrl;
     if (data.options !== undefined) updatePayload.options = JSON.stringify(data.options);
     if (data.correctOpt !== undefined) updatePayload.correctOpt = data.correctOpt;
     if (data.points !== undefined) updatePayload.points = data.points;
@@ -461,6 +466,7 @@ export async function updateQuestion(id: number, data: Partial<QuestionData>): P
       postId: updated.postId,
       promptText: updated.promptText,
       imageUrl: updated.imageUrl,
+      audioUrl: updated.audioUrl,
       options: JSON.parse(updated.options),
       correctOpt: updated.correctOpt,
       points: updated.points,

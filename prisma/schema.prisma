@@ -38,6 +38,7 @@ model Question {
   post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   promptText String   
   imageUrl   String?  // Optional Image URL for Tebak Gambar quiz questions
+  audioUrl   String?  // Optional Audio URL for Tebak Lagu quiz questions
   options    String   // JSON stringified array: ["Opsi A", "Opsi B", "Opsi C", "Opsi D"]
   correctOpt String   // "A", "B", "C", "D"
   points     Int      @default(20)

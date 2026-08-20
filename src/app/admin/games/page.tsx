@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { PostData, QuestionData } from "@/lib/store";
-import { Plus, Edit2, Trash2, ArrowLeft, FileText, CheckCircle2, HelpCircle, Eye, Calculator, Zap, Activity, Upload, Image as ImageIcon, X } from "lucide-react";
+import { Plus, Edit2, Trash2, ArrowLeft, FileText, CheckCircle2, HelpCircle, Eye, Calculator, Zap, Activity, Upload, Image as ImageIcon, Music, Volume2, X } from "lucide-react";
 import Link from "next/link";
 
 export default function AdminGamesPage() {
@@ -15,7 +15,10 @@ export default function AdminGamesPage() {
   const [editingQuestionId, setEditingQuestionId] = useState<number | null>(null);
   const [promptText, setPromptText] = useState("");
   const [imageUrl, setImageUrl] = useState("");
-  const [isUploading, setIsUploading] = useState(false);
+  const [audioUrl, setAudioUrl] = useState("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isUploadingAudio, setIsUploadingAudio] = useState(false);
+
   const [optionA, setOptionA] = useState("");
   const [optionB, setOptionB] = useState("");
   const [optionC, setOptionC] = useState("");
@@ -65,6 +68,7 @@ export default function AdminGamesPage() {
     setEditingQuestionId(null);
     setPromptText("");
     setImageUrl("");
+    setAudioUrl("");
     setOptionA("");
     setOptionB("");
     setOptionC("");
@@ -77,6 +81,7 @@ export default function AdminGamesPage() {
     setEditingQuestionId(q.id);
     setPromptText(q.promptText);
     setImageUrl(q.imageUrl || "");
+    setAudioUrl(q.audioUrl || "");
     setOptionA(q.options[0] || "");
     setOptionB(q.options[1] || "");
     setOptionC(q.options[2] || "");
@@ -85,12 +90,12 @@ export default function AdminGamesPage() {
     setPoints(q.points || 20);
   };
 
-  // File Upload Handler
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Image Upload Handler
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setIsUploading(true);
+    setIsUploadingImage(true);
     const formData = new FormData();
     formData.append("file", file);
 
@@ -104,17 +109,50 @@ export default function AdminGamesPage() {
 
       if (!res.ok) {
         alert(data.error || "Gagal mengunggah gambar");
-        setIsUploading(false);
+        setIsUploadingImage(false);
         return;
       }
 
-      setImageUrl(data.imageUrl);
+      setImageUrl(data.fileUrl);
       setNotification("File gambar berhasil diunggah");
       setTimeout(() => setNotification(""), 3000);
     } catch (err) {
-      alert("Terjadi kesalahan koneksi saat mengunggah file");
+      alert("Terjadi kesalahan koneksi saat mengunggah gambar");
     } finally {
-      setIsUploading(false);
+      setIsUploadingImage(false);
+    }
+  };
+
+  // Audio Upload Handler
+  const handleAudioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingAudio(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "Gagal mengunggah file audio");
+        setIsUploadingAudio(false);
+        return;
+      }
+
+      setAudioUrl(data.fileUrl);
+      setNotification("File audio potongan lagu berhasil diunggah");
+      setTimeout(() => setNotification(""), 3000);
+    } catch (err) {
+      alert("Terjadi kesalahan koneksi saat mengunggah file audio");
+    } finally {
+      setIsUploadingAudio(false);
     }
   };
 
@@ -132,6 +170,7 @@ export default function AdminGamesPage() {
             id: editingQuestionId,
             promptText,
             imageUrl: imageUrl.trim() || null,
+            audioUrl: audioUrl.trim() || null,
             options: [optionA, optionB, optionC, optionD],
             correctOpt,
             points,
@@ -153,6 +192,7 @@ export default function AdminGamesPage() {
             postId: selectedPostId,
             promptText,
             imageUrl: imageUrl.trim() || null,
+            audioUrl: audioUrl.trim() || null,
             options: [optionA, optionB, optionC, optionD],
             correctOpt,
             points,
@@ -220,7 +260,7 @@ export default function AdminGamesPage() {
               PENGATURAN KONTEN & BANK SOAL GAME
             </h1>
             <p className="text-xs text-slate-400">
-              Edit soal kuis, tambah baru, unggah gambar Tebak Gambar, atau hapus semua soal per pos
+              Kelola soal kuis, upload gambar Tebak Gambar, upload file audio Tebak Lagu, atau hapus semua soal
             </p>
           </div>
         </div>
@@ -304,20 +344,20 @@ export default function AdminGamesPage() {
                         rows={2}
                         value={promptText}
                         onChange={(e) => setPromptText(e.target.value)}
-                        placeholder="Misal: TEBAK GAMBAR: Gambar manakah ini?"
+                        placeholder="Misal: TEBAK LAGU: Dengarkan potongan lagu berikut!"
                         className="w-full px-3 py-2 bg-slate-950 border border-slate-800 focus:border-sky-500 focus:outline-none rounded-xl text-xs text-slate-100"
                       />
                     </div>
 
-                    {/* File Upload Component */}
+                    {/* Image Upload Field (Tebak Gambar) */}
                     <div>
                       <label className="block text-[11px] font-semibold uppercase text-slate-400 mb-1 flex items-center gap-1">
-                        <Upload className="w-3.5 h-3.5 text-sky-400" />
-                        <span>Upload File Gambar Soal (Opsional)</span>
+                        <ImageIcon className="w-3.5 h-3.5 text-sky-400" />
+                        <span>Upload File Gambar (Opsional - Tebak Gambar)</span>
                       </label>
 
                       {imageUrl ? (
-                        <div className="relative w-full h-32 rounded-xl overflow-hidden border border-sky-500 bg-slate-950 p-1 group">
+                        <div className="relative w-full h-28 rounded-xl overflow-hidden border border-sky-500 bg-slate-950 p-1 group">
                           <img src={imageUrl} alt="Uploaded Preview" className="w-full h-full object-cover rounded-lg" />
                           <button
                             type="button"
@@ -329,19 +369,60 @@ export default function AdminGamesPage() {
                           </button>
                         </div>
                       ) : (
-                        <div className="relative border-2 border-dashed border-slate-800 hover:border-sky-500 rounded-xl p-4 text-center transition-colors bg-slate-950/60">
+                        <div className="relative border-2 border-dashed border-slate-800 hover:border-sky-500 rounded-xl p-3 text-center transition-colors bg-slate-950/60">
                           <input
                             type="file"
                             accept="image/*"
-                            onChange={handleFileUpload}
-                            disabled={isUploading}
+                            onChange={handleImageUpload}
+                            disabled={isUploadingImage}
                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                           />
-                          <Upload className="w-6 h-6 text-slate-500 mx-auto mb-1" />
+                          <Upload className="w-5 h-5 text-slate-500 mx-auto mb-1" />
                           <p className="text-xs font-semibold text-slate-300">
-                            {isUploading ? "Mengunggah file..." : "Pilih / Drag File Gambar Di Sini"}
+                            {isUploadingImage ? "Mengunggah gambar..." : "Pilih File Gambar"}
                           </p>
-                          <p className="text-[10px] text-slate-500 font-mono">PNG, JPG, WEBP (Max 5MB)</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Audio Upload Field (Tebak Lagu) */}
+                    <div>
+                      <label className="block text-[11px] font-semibold uppercase text-slate-400 mb-1 flex items-center gap-1">
+                        <Music className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Upload File Suara (Opsional - Tebak Lagu)</span>
+                      </label>
+
+                      {audioUrl ? (
+                        <div className="p-3 rounded-xl border border-emerald-500 bg-slate-950 flex flex-col gap-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
+                              <Volume2 className="w-3.5 h-3.5" />
+                              <span>Audio Klip Terpasang</span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setAudioUrl("")}
+                              className="text-red-400 hover:text-red-300 text-xs font-bold flex items-center gap-1"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                              <span>Hapus Audio</span>
+                            </button>
+                          </div>
+                          <audio src={audioUrl} controls className="w-full h-8 rounded" />
+                        </div>
+                      ) : (
+                        <div className="relative border-2 border-dashed border-slate-800 hover:border-emerald-500 rounded-xl p-3 text-center transition-colors bg-slate-950/60">
+                          <input
+                            type="file"
+                            accept="audio/*,.mp3,.wav,.m4a,.ogg"
+                            onChange={handleAudioUpload}
+                            disabled={isUploadingAudio}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          />
+                          <Music className="w-5 h-5 text-slate-500 mx-auto mb-1" />
+                          <p className="text-xs font-semibold text-slate-300">
+                            {isUploadingAudio ? "Mengunggah audio..." : "Pilih File Audio (.mp3, .wav, .m4a)"}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -413,7 +494,7 @@ export default function AdminGamesPage() {
 
                     <button
                       type="submit"
-                      disabled={isUploading}
+                      disabled={isUploadingImage || isUploadingAudio}
                       className="w-full mt-2 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 font-bold text-xs text-white uppercase shadow-lg shadow-sky-950 disabled:opacity-40"
                     >
                       {editingQuestionId ? "SIMPAN PERUBAHAN SOAL" : "SIMPAN SOAL BARU"}
@@ -453,7 +534,7 @@ export default function AdminGamesPage() {
                       questions.map((q, idx) => (
                         <div key={q.id} className="p-5 flex items-start justify-between gap-4">
                           <div className="space-y-2 flex-1">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-mono text-xs font-bold text-sky-400">#{idx + 1}</span>
                               <h4 className="font-bold text-sm text-slate-100">{q.promptText}</h4>
                               <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">
@@ -461,14 +542,23 @@ export default function AdminGamesPage() {
                               </span>
                             </div>
 
-                            {/* Image Thumbnail Preview if present */}
-                            {q.imageUrl && (
-                              <div className="w-24 h-16 rounded-lg overflow-hidden border border-slate-800 bg-slate-950">
-                                <img src={q.imageUrl} alt="Thumbnail Gambar" className="w-full h-full object-cover" />
-                              </div>
-                            )}
+                            {/* Media Previews (Image / Audio) */}
+                            <div className="flex flex-wrap items-center gap-3">
+                              {q.imageUrl && (
+                                <div className="w-24 h-16 rounded-lg overflow-hidden border border-slate-800 bg-slate-950">
+                                  <img src={q.imageUrl} alt="Thumbnail Gambar" className="w-full h-full object-cover" />
+                                </div>
+                              )}
 
-                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              {q.audioUrl && (
+                                <div className="p-2 rounded-lg border border-emerald-800 bg-emerald-950/40 flex items-center gap-2">
+                                  <Music className="w-4 h-4 text-emerald-400 shrink-0" />
+                                  <audio src={q.audioUrl} controls className="h-7 w-48" />
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 text-xs pt-1">
                               {q.options.map((opt, oIdx) => {
                                 const letters = ["A", "B", "C", "D"];
                                 const isCorrect = letters[oIdx] === q.correctOpt;

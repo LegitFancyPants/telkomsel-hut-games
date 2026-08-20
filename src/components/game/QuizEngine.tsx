@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Clock, User, ArrowRight, CheckCircle2, Image as ImageIcon } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Clock, User, ArrowRight, CheckCircle2, Image as ImageIcon, Music, Volume2, Play, Pause } from "lucide-react";
 import { formatTime } from "@/lib/utils";
 
 interface Question {
   id: number;
   promptText: string;
   imageUrl?: string | null;
+  audioUrl?: string | null;
   options: string[];
   points: number;
 }
@@ -33,10 +34,23 @@ export default function QuizEngine({
   const [userAnswers, setUserAnswers] = useState<{ [questionId: number]: string }>({});
   const [timeLeft, setTimeLeft] = useState(timeLimit || 60);
 
+  // Audio Player State
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
   const currentQ = questions[currentIndex];
   const optionLabels = ["A", "B", "C", "D"];
 
-  // Countdown Timer Effect (FR-07)
+  // Reset audio state when switching questions
+  useEffect(() => {
+    setIsPlayingAudio(false);
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+  }, [currentIndex]);
+
+  // Countdown Timer Effect
   useEffect(() => {
     if (timeLeft <= 0) {
       onSubmitAnswers(userAnswers);
@@ -49,6 +63,19 @@ export default function QuizEngine({
 
     return () => clearInterval(timer);
   }, [timeLeft, onSubmitAnswers, userAnswers]);
+
+  const handleToggleAudio = () => {
+    if (!audioRef.current) return;
+    if (isPlayingAudio) {
+      audioRef.current.pause();
+      setIsPlayingAudio(false);
+    } else {
+      audioRef.current
+        .play()
+        .then(() => setIsPlayingAudio(true))
+        .catch((e) => console.error("Audio playback error:", e));
+    }
+  };
 
   const handleSelectOption = (optionLetter: string) => {
     if (currentQ) {
@@ -74,7 +101,7 @@ export default function QuizEngine({
   const timerPercentage = Math.max(0, (timeLeft / (timeLimit || 60)) * 100);
 
   return (
-    <div className="w-full max-w-sm mx-auto p-4 sm:p-6 bg-slate-900/90 border border-slate-800 rounded-2xl shadow-2xl backdrop-blur-sm text-slate-100 flex flex-col">
+    <div className="w-full max-w-sm mx-auto p-4 sm:p-6 bg-slate-900/90 border border-slate-800 rounded-2xl shadow-2xl backdrop-blur-sm text-slate-100 flex flex-col select-none">
       {/* Header Info */}
       <div className="w-full flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
         <h2 className="text-xs font-bold tracking-wider text-slate-200 uppercase truncate">
@@ -106,7 +133,7 @@ export default function QuizEngine({
         </div>
       </div>
 
-      {/* Question Card with Image (Tebak Gambar) */}
+      {/* Question Card with Image or Audio Player (Tebak Gambar / Tebak Lagu) */}
       <div className="w-full p-4 mb-4 bg-slate-950 border border-slate-800 rounded-xl text-center shadow-inner flex flex-col items-center">
         {/* Optional Image for Tebak Gambar */}
         {currentQ.imageUrl && (
@@ -116,10 +143,49 @@ export default function QuizEngine({
               alt="Gambar Pertanyaan Kuis"
               className="w-full h-full object-cover"
               onError={(e) => {
-                // Fallback if image fails to load
                 (e.target as HTMLElement).style.display = "none";
               }}
             />
+          </div>
+        )}
+
+        {/* Optional Audio Player for Tebak Lagu */}
+        {currentQ.audioUrl && (
+          <div className="w-full p-3 mb-3 bg-slate-900 border border-sky-800/80 rounded-xl flex flex-col items-center gap-2">
+            <audio
+              ref={audioRef}
+              src={currentQ.audioUrl}
+              onEnded={() => setIsPlayingAudio(false)}
+              onPause={() => setIsPlayingAudio(false)}
+              onPlay={() => setIsPlayingAudio(true)}
+              preload="metadata"
+            />
+            <div className="flex items-center gap-2 text-sky-400">
+              <Music className="w-4 h-4 animate-bounce" />
+              <span className="text-xs font-bold uppercase tracking-wider">AUDIO KLIP LAGU</span>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleToggleAudio}
+              className={`touch-btn w-full py-2.5 px-4 rounded-lg font-extrabold text-xs flex items-center justify-center gap-2 transition-all border ${
+                isPlayingAudio
+                  ? "bg-amber-950/80 border-amber-500 text-amber-300 shadow-md"
+                  : "bg-sky-600 hover:bg-sky-500 border-sky-500 text-white shadow-lg"
+              }`}
+            >
+              {isPlayingAudio ? (
+                <>
+                  <Pause className="w-4 h-4 fill-current" />
+                  <span>JEDA AUDIO</span>
+                </>
+              ) : (
+                <>
+                  <Play className="w-4 h-4 fill-current" />
+                  <span>PUTAR KLIP AUDIO</span>
+                </>
+              )}
+            </button>
           </div>
         )}
 

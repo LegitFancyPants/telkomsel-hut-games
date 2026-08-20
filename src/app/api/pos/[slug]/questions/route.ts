@@ -38,6 +38,7 @@ export async function GET(
       id: q.id,
       promptText: q.promptText,
       imageUrl: q.imageUrl,
+      audioUrl: q.audioUrl,
       options: q.options,
       points: q.points,
     }));

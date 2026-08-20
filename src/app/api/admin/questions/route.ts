@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { postId, promptText, imageUrl, options, correctOpt, points } = body;
+    const { postId, promptText, imageUrl, audioUrl, options, correctOpt, points } = body;
 
     if (!postId || !promptText || !options || !correctOpt) {
       return NextResponse.json({ error: "Post ID, pertanyaan, opsi, dan kunci jawaban wajib diisi" }, { status: 400 });
@@ -30,6 +30,7 @@ export async function POST(req: NextRequest) {
       postId: Number(postId),
       promptText,
       imageUrl: imageUrl || null,
+      audioUrl: audioUrl || null,
       options: Array.isArray(options) ? options : JSON.parse(options),
       correctOpt: String(correctOpt).toUpperCase(),
       points: Number(points) || 20,
@@ -44,7 +45,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, promptText, imageUrl, options, correctOpt, points } = body;
+    const { id, promptText, imageUrl, audioUrl, options, correctOpt, points } = body;
 
     if (!id) {
       return NextResponse.json({ error: "ID soal wajib diisi" }, { status: 400 });
@@ -53,6 +54,7 @@ export async function PUT(req: NextRequest) {
     const updated = await updateQuestion(Number(id), {
       promptText,
       imageUrl: imageUrl !== undefined ? imageUrl : undefined,
+      audioUrl: audioUrl !== undefined ? audioUrl : undefined,
       options: options ? (Array.isArray(options) ? options : JSON.parse(options)) : undefined,
       correctOpt: correctOpt ? String(correctOpt).toUpperCase() : undefined,
       points: points ? Number(points) : undefined,
