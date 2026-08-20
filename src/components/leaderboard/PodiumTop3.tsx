@@ -8,7 +8,14 @@ interface PodiumTop3Props {
 }
 
 export default function PodiumTop3({ groups }: PodiumTop3Props) {
-  const sorted = [...groups].sort((a, b) => b.totalScore - a.totalScore);
+  const sorted = [...groups].sort((a, b) => {
+    if (b.totalScore !== a.totalScore) {
+      return b.totalScore - a.totalScore;
+    }
+    const timeA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+    const timeB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+    return timeA - timeB;
+  });
   const first = sorted[0];
   const second = sorted[1];
   const third = sorted[2];

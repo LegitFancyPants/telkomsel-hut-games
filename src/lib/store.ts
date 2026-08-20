@@ -279,12 +279,24 @@ export async function deletePost(id: number): Promise<boolean> {
 export async function getGroups(): Promise<GroupData[]> {
   try {
     await ensureDbSeeded();
-    const groups = await prisma.group.findMany({ orderBy: { totalScore: "desc" } });
+    const groups = await prisma.group.findMany({
+      orderBy: [
+        { totalScore: "desc" },
+        { updatedAt: "asc" },
+      ],
+    });
     if (groups.length > 0) return groups;
   } catch (e) {
     console.error("getGroups Error:", e);
   }
-  return [...memoryGroups].sort((a, b) => b.totalScore - a.totalScore);
+  return [...memoryGroups].sort((a, b) => {
+    if (b.totalScore !== a.totalScore) {
+      return b.totalScore - a.totalScore;
+    }
+    const timeA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+    const timeB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+    return timeA - timeB;
+  });
 }
 
 export async function getGroupById(id: number): Promise<GroupData | null> {

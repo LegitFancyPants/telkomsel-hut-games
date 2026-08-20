@@ -7,7 +7,14 @@ interface LeaderboardTableProps {
 }
 
 export default function LeaderboardTable({ groups }: LeaderboardTableProps) {
-  const sortedGroups = [...groups].sort((a, b) => b.totalScore - a.totalScore);
+  const sortedGroups = [...groups].sort((a, b) => {
+    if (b.totalScore !== a.totalScore) {
+      return b.totalScore - a.totalScore;
+    }
+    const timeA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+    const timeB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+    return timeA - timeB;
+  });
   // Filter out Top 3 (ranks 1-3) since they are already displayed in PodiumTop3
   const remainingGroups = sortedGroups.slice(3);
 
