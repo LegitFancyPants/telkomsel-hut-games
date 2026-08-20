@@ -177,7 +177,7 @@ export default function PosPage() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
       <Navbar />
 
       <main className="flex-1 max-w-lg w-full mx-auto px-4 py-6 sm:py-10 flex flex-col justify-center">
@@ -204,7 +204,7 @@ export default function PosPage() {
         {step === "GAMEPLAY" && postData && selectedGroup && (
           <>
             {errorMsg && (
-              <div className="mb-4 p-3 rounded-xl bg-red-950/80 border border-red-800 text-xs text-red-300 text-center flex items-center justify-center gap-2">
+              <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-600 text-center flex items-center justify-center gap-2 font-bold">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{errorMsg}</span>
               </div>
@@ -265,29 +265,29 @@ export default function PosPage() {
 
         {/* State 4: Score Summary Screen */}
         {step === "SUMMARY" && resultSummary && (
-          <div className="w-full max-w-sm mx-auto p-6 bg-slate-900/90 border border-slate-800 rounded-2xl shadow-2xl text-center text-slate-100 flex flex-col items-center">
-            <div className="w-16 h-16 rounded-2xl bg-sky-950 border border-sky-800 flex items-center justify-center text-sky-400 mb-4 shadow-lg">
+          <div className="w-full max-w-sm mx-auto p-6 bg-white border border-slate-200 rounded-2xl shadow-xl shadow-red-950/5 text-center text-slate-900 flex flex-col items-center">
+            <div className="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 mb-4 shadow-md">
               <CheckCircle2 className="w-8 h-8" />
             </div>
 
-            <h2 className="text-lg font-extrabold uppercase tracking-wide text-slate-100 mb-1">
+            <h2 className="text-lg font-black uppercase tracking-wide text-slate-900 mb-1">
               POS SELESAI
             </h2>
-            <p className="text-xs text-slate-400 font-semibold mb-6">
+            <p className="text-xs text-slate-500 font-bold mb-6">
               {resultSummary.groupName}
             </p>
 
-            <div className="w-full p-4 bg-slate-950 border border-slate-800 rounded-xl mb-6 space-y-3">
+            <div className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl mb-6 space-y-3">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">Poin Didapat:</span>
-                <span className="font-mono text-base font-bold text-sky-400">
+                <span className="text-slate-600">Poin Didapat:</span>
+                <span className="font-mono text-base font-black text-red-600">
                   +{resultSummary.pointsEarned} PTS
                 </span>
               </div>
-              <div className="h-px bg-slate-800" />
+              <div className="h-px bg-slate-200" />
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">Total Skor Kelompok:</span>
-                <span className="font-mono text-base font-bold text-amber-400">
+                <span className="text-slate-600">Total Skor Kelompok:</span>
+                <span className="font-mono text-base font-black text-slate-900">
                   {resultSummary.newTotalScore} PTS
                 </span>
               </div>
@@ -297,7 +297,7 @@ export default function PosPage() {
               <button
                 type="button"
                 onClick={() => router.push("/leaderboard")}
-                className="touch-btn w-full font-bold uppercase tracking-wider text-xs bg-sky-600 hover:bg-sky-500 text-white rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all"
+                className="touch-btn w-full font-extrabold uppercase tracking-wider text-xs bg-red-600 hover:bg-red-700 text-white rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-red-600/20 transition-all"
               >
                 <Trophy className="w-4 h-4" />
                 <span>LIHAT LIVE LEADERBOARD</span>
@@ -310,7 +310,7 @@ export default function PosPage() {
                   sessionStorage.removeItem(`pos_data_${slug}`);
                   setStep("PIN_GATE");
                 }}
-                className="touch-btn w-full font-semibold uppercase tracking-wider text-xs bg-slate-950 hover:bg-slate-800 text-slate-300 rounded-xl flex items-center justify-center gap-2 border border-slate-800 transition-all"
+                className="touch-btn w-full font-bold uppercase tracking-wider text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl flex items-center justify-center gap-2 border border-slate-200 transition-all"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 <span>KEMBALI KE INPUT PIN</span>

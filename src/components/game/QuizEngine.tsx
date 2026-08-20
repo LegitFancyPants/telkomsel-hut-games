@@ -120,32 +120,32 @@ export default function QuizEngine({
   const timerPercentage = Math.max(0, (timeLeft / (timeLimit || 60)) * 100);
 
   return (
-    <div className="w-full max-w-sm mx-auto p-4 sm:p-6 bg-slate-900/90 border border-slate-800 rounded-2xl shadow-2xl backdrop-blur-sm text-slate-100 flex flex-col select-none">
+    <div className="w-full max-w-sm mx-auto p-4 sm:p-6 bg-white border border-slate-200 rounded-2xl shadow-xl shadow-red-950/5 text-slate-900 flex flex-col select-none">
       {/* Header Info */}
-      <div className="w-full flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
-        <h2 className="text-xs font-bold tracking-wider text-slate-200 uppercase truncate">
+      <div className="w-full flex items-center justify-between pb-3 mb-3 border-b border-slate-200">
+        <h2 className="text-xs font-bold tracking-wider text-slate-900 uppercase truncate">
           {postName} - {groupName}
         </h2>
-        <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
-          <User className="w-4 h-4 text-slate-400" />
+        <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+          <User className="w-4 h-4 text-slate-500" />
         </div>
       </div>
 
       {/* Progress & Countdown Bar */}
       <div className="mb-4">
-        <div className="flex items-center justify-between text-xs font-semibold text-slate-300 mb-2">
+        <div className="flex items-center justify-between text-xs font-semibold text-slate-700 mb-2">
           <span>Pertanyaan {currentIndex + 1} dari {questions.length}</span>
-          <div className={`flex items-center gap-1 font-mono font-bold ${timeLeft <= 10 ? "text-red-400 animate-pulse-subtle" : "text-sky-400"}`}>
+          <div className={`flex items-center gap-1 font-mono font-bold ${timeLeft <= 10 ? "text-red-600 animate-pulse-subtle" : "text-red-600"}`}>
             <Clock className="w-3.5 h-3.5" />
             <span>{formatTime(timeLeft)}</span>
           </div>
         </div>
 
         {/* Progress Bar */}
-        <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+        <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
           <div
             className={`h-full transition-all duration-1000 ${
-              timeLeft <= 10 ? "bg-red-500" : "bg-sky-500"
+              timeLeft <= 10 ? "bg-red-600" : "bg-red-600"
             }`}
             style={{ width: `${timerPercentage}%` }}
           />
@@ -153,10 +153,10 @@ export default function QuizEngine({
       </div>
 
       {/* Question Card with Image or Audio Player (Tebak Gambar / Tebak Lagu) */}
-      <div className="w-full p-4 mb-4 bg-slate-950 border border-slate-800 rounded-xl text-center shadow-inner flex flex-col items-center">
+      <div className="w-full p-4 mb-4 bg-slate-50 border border-slate-200 rounded-xl text-center shadow-inner flex flex-col items-center">
         {/* Optional Image for Tebak Gambar */}
         {currentQ.imageUrl && (
-          <div className="w-full h-44 mb-3 rounded-lg overflow-hidden border border-slate-800 bg-slate-900 relative flex items-center justify-center">
+          <div className="w-full h-44 mb-3 rounded-lg overflow-hidden border border-slate-200 bg-white relative flex items-center justify-center">
             <img
               src={currentQ.imageUrl}
               alt="Gambar Pertanyaan Kuis"
@@ -170,7 +170,7 @@ export default function QuizEngine({
 
         {/* Optional 10-Second Trimming Audio Player for Tebak Lagu */}
         {currentQ.audioUrl && (
-          <div className="w-full p-3.5 mb-3 bg-slate-900 border border-emerald-800/80 rounded-xl flex flex-col items-center gap-2.5">
+          <div className="w-full p-3.5 mb-3 bg-white border border-red-200 rounded-xl flex flex-col items-center gap-2.5 shadow-sm">
             <audio
               ref={audioRef}
               src={currentQ.audioUrl}
@@ -185,19 +185,19 @@ export default function QuizEngine({
             />
 
             <div className="w-full flex items-center justify-between">
-              <div className="flex items-center gap-1.5 text-emerald-400">
+              <div className="flex items-center gap-1.5 text-red-600">
                 <Music className="w-4 h-4 animate-bounce" />
                 <span className="text-[11px] font-extrabold uppercase tracking-wider">TEBAK LAGU (10 DETIK)</span>
               </div>
-              <span className="text-xs font-mono font-bold text-amber-400">
+              <span className="text-xs font-mono font-bold text-slate-800">
                 00:0{audioProgressSec} / 00:10
               </span>
             </div>
 
             {/* 10-Second Progress Bar */}
-            <div className="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+            <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
               <div
-                className="h-full bg-emerald-500 transition-all duration-300"
+                className="h-full bg-red-600 transition-all duration-300"
                 style={{ width: `${(audioProgressSec / 10) * 100}%` }}
               />
             </div>
@@ -207,8 +207,8 @@ export default function QuizEngine({
               onClick={handleToggleAudio}
               className={`touch-btn w-full py-2.5 px-4 rounded-lg font-extrabold text-xs flex items-center justify-center gap-2 transition-all border ${
                 isPlayingAudio
-                  ? "bg-amber-950/80 border-amber-500 text-amber-300 shadow-md"
-                  : "bg-emerald-600 hover:bg-emerald-500 border-emerald-500 text-white shadow-lg"
+                  ? "bg-slate-900 border-slate-900 text-white shadow-md"
+                  : "bg-red-600 hover:bg-red-700 border-red-600 text-white shadow-md shadow-red-600/20"
               }`}
             >
               {isPlayingAudio ? (
@@ -226,7 +226,7 @@ export default function QuizEngine({
           </div>
         )}
 
-        <p className="text-sm font-semibold text-slate-100 leading-relaxed">
+        <p className="text-sm font-bold text-slate-900 leading-relaxed">
           {currentQ.promptText}
         </p>
       </div>
@@ -244,27 +244,27 @@ export default function QuizEngine({
               onClick={() => handleSelectOption(letter)}
               className={`w-full p-3 rounded-xl border text-left flex items-center justify-between transition-all touch-btn ${
                 isSelected
-                  ? "bg-sky-950/70 border-sky-500 text-sky-200 shadow-md ring-1 ring-sky-500/50"
-                  : "bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-900/60"
+                  ? "bg-red-50 border-red-600 text-red-700 shadow-md ring-1 ring-red-600/30"
+                  : "bg-slate-50 border-slate-200 text-slate-800 hover:border-slate-300 hover:bg-slate-100"
               }`}
             >
               <div className="flex items-center gap-3">
                 <span
                   className={`w-7 h-7 rounded-lg border font-bold text-xs flex items-center justify-center transition-all ${
                     isSelected
-                      ? "border-sky-400 bg-sky-600 text-white"
-                      : "border-slate-700 bg-slate-900 text-slate-400"
+                      ? "border-red-600 bg-red-600 text-white"
+                      : "border-slate-300 bg-white text-slate-700"
                   }`}
                 >
                   {letter}
                 </span>
-                <span className="text-xs sm:text-sm font-medium tracking-wide">
+                <span className="text-xs sm:text-sm font-bold tracking-wide">
                   {optText}
                 </span>
               </div>
 
               {isSelected && (
-                <span className="text-xs font-semibold text-sky-400 px-2 py-0.5 rounded bg-sky-950 border border-sky-800">
+                <span className="text-xs font-bold text-red-600 px-2 py-0.5 rounded bg-white border border-red-200">
                   Dipilih
                 </span>
               )}
@@ -278,7 +278,7 @@ export default function QuizEngine({
         type="button"
         onClick={handleNext}
         disabled={isSubmitting || !selectedForCurrent}
-        className="touch-btn w-full font-bold uppercase tracking-wider text-sm bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-sky-950/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+        className="touch-btn w-full font-extrabold uppercase tracking-wider text-sm bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-red-600/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {isSubmitting ? (
           <span className="inline-block animate-pulse-subtle">MEMPROSES...</span>

@@ -128,21 +128,21 @@ export default function AdminPostsPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
       <Navbar />
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-800">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-200">
           <div>
-            <Link href="/admin/dashboard" className="text-xs font-semibold text-sky-400 flex items-center gap-1 mb-2 hover:underline">
+            <Link href="/admin/dashboard" className="text-xs font-bold text-red-600 flex items-center gap-1 mb-2 hover:underline">
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Kembali ke Dashboard Admin</span>
             </Link>
-            <h1 className="text-2xl font-extrabold text-slate-100 uppercase tracking-wide">
+            <h1 className="text-2xl font-black text-slate-900 uppercase tracking-wide">
               MANAJEMEN POS PERMAINAN (FULL CRUD)
             </h1>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-600 font-medium">
               Tambah, ubah nama pos, slug URL, PIN 4-digit, batas waktu, dan mode game aktif
             </p>
           </div>
@@ -150,7 +150,7 @@ export default function AdminPostsPage() {
           <button
             type="button"
             onClick={openCreateModal}
-            className="px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 font-bold text-xs text-white flex items-center gap-2 shadow-lg shadow-sky-950 transition-all"
+            className="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 font-bold text-xs text-white flex items-center gap-2 shadow-lg shadow-red-600/20 transition-all"
           >
             <Plus className="w-4 h-4" />
             <span>TAMBAH POS BARU</span>
@@ -158,38 +158,38 @@ export default function AdminPostsPage() {
         </div>
 
         {notification && (
-          <div className="mb-6 p-3.5 rounded-xl bg-emerald-950/80 border border-emerald-800 text-xs font-bold text-emerald-300 flex items-center gap-2">
+          <div className="mb-6 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-700 flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4" />
             <span>{notification}</span>
           </div>
         )}
 
         {/* Posts Table */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-          <div className="px-6 py-4 border-b border-slate-800 bg-slate-950/60 flex items-center justify-between">
-            <h2 className="text-sm font-bold text-slate-200 uppercase tracking-wider">
+        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xl shadow-red-950/5">
+          <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
               DAFTAR POS PERMAINAN ({posts.length})
             </h2>
           </div>
 
-          <div className="divide-y divide-slate-800">
+          <div className="divide-y divide-slate-100">
             {posts.map((post) => (
-              <div key={post.id} className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-950/40 transition-colors">
+              <div key={post.id} className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50 transition-colors">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-mono text-xs font-bold text-sky-400 px-2 py-0.5 rounded bg-sky-950 border border-sky-800">
+                    <span className="font-mono text-xs font-bold text-red-600 px-2 py-0.5 rounded bg-red-50 border border-red-200">
                       #{post.id}
                     </span>
-                    <h3 className="font-bold text-slate-100 text-sm">{post.name}</h3>
+                    <h3 className="font-bold text-slate-900 text-sm">{post.name}</h3>
                     <span className="text-xs text-slate-500 font-mono">(/pos/{post.slug})</span>
                   </div>
-                  <p className="text-xs text-slate-400">
-                    Mode Game: <span className="text-sky-300 font-bold uppercase">{post.gameType}</span> | Batas Waktu: <span className="text-slate-200 font-semibold">{post.timeLimit}s</span>
+                  <p className="text-xs text-slate-600">
+                    Mode Game: <span className="text-red-600 font-bold uppercase">{post.gameType}</span> | Batas Waktu: <span className="text-slate-900 font-bold">{post.timeLimit}s</span>
                   </p>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1.5 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 font-mono text-xs font-bold text-sky-400">
+                  <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 font-mono text-xs font-bold text-red-600">
                     <Key className="w-3.5 h-3.5 text-slate-400" />
                     <span>{post.pinCode}</span>
                   </div>
@@ -199,18 +199,18 @@ export default function AdminPostsPage() {
                     onClick={() => handleToggleStatus(post)}
                     className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all ${
                       post.isActive
-                        ? "bg-emerald-950 border border-emerald-800 text-emerald-400"
-                        : "bg-red-950 border border-red-800 text-red-400"
+                        ? "bg-emerald-50 border border-emerald-200 text-emerald-700"
+                        : "bg-red-50 border border-red-200 text-red-700"
                     }`}
                   >
-                    {post.isActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                    {post.isActive ? <ToggleRight className="w-4 h-4 text-emerald-600" /> : <ToggleLeft className="w-4 h-4 text-red-600" />}
                     <span>{post.isActive ? "OPEN" : "PAUSED"}</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => openEditModal(post)}
-                    className="p-2 rounded-xl bg-slate-950 border border-slate-800 hover:border-sky-500 text-slate-300 hover:text-white transition-all"
+                    className="p-2 rounded-xl bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-700 transition-all"
                     title="Edit Pos"
                   >
                     <Edit2 className="w-4 h-4" />
@@ -219,7 +219,7 @@ export default function AdminPostsPage() {
                   <button
                     type="button"
                     onClick={() => handleDelete(post.id, post.name)}
-                    className="p-2 rounded-xl bg-slate-950 border border-slate-800 hover:border-red-500 text-slate-400 hover:text-red-400 transition-all"
+                    className="p-2 rounded-xl bg-slate-100 border border-slate-200 hover:bg-red-50 hover:border-red-200 text-slate-500 hover:text-red-600 transition-all"
                     title="Hapus Pos"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -233,15 +233,15 @@ export default function AdminPostsPage() {
 
       {/* Modal Form */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
-            <h2 className="text-base font-bold text-slate-100 uppercase tracking-wide mb-4">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl">
+            <h2 className="text-base font-black text-slate-900 uppercase tracking-wide mb-4">
               {editingPost ? `EDIT POS #${editingPost.id}` : "TAMBAH POS BARU"}
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">
+                <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
                   Nama Pos
                 </label>
                 <input
@@ -250,12 +250,12 @@ export default function AdminPostsPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="Misal: POS 6: ULAR KETANGKASAN"
-                  className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 focus:border-sky-500 focus:outline-none rounded-xl text-sm text-slate-100"
+                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-red-600 focus:outline-none rounded-xl text-sm text-slate-900 font-medium"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">
+                <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
                   Slug URL (misal: pos-6)
                 </label>
                 <input
@@ -264,13 +264,13 @@ export default function AdminPostsPage() {
                   value={formData.slug}
                   onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                   placeholder="pos-6"
-                  className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 focus:border-sky-500 focus:outline-none rounded-xl text-sm font-mono text-slate-100"
+                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-red-600 focus:outline-none rounded-xl text-sm font-mono text-slate-900"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">
+                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
                     PIN Pos (4-6 Digit)
                   </label>
                   <input
@@ -279,12 +279,12 @@ export default function AdminPostsPage() {
                     value={formData.pinCode}
                     onChange={(e) => setFormData({ ...formData, pinCode: e.target.value })}
                     placeholder="4829"
-                    className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 focus:border-sky-500 focus:outline-none rounded-xl text-sm font-mono text-slate-100"
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-red-600 focus:outline-none rounded-xl text-sm font-mono text-slate-900"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">
+                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
                     Batas Waktu (Detik)
                   </label>
                   <input
@@ -293,19 +293,19 @@ export default function AdminPostsPage() {
                     value={formData.timeLimit}
                     onChange={(e) => setFormData({ ...formData, timeLimit: Number(e.target.value) })}
                     placeholder="60"
-                    className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 focus:border-sky-500 focus:outline-none rounded-xl text-sm font-mono text-slate-100"
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-red-600 focus:outline-none rounded-xl text-sm font-mono text-slate-900"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">
+                <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
                   Mode Game Aktif
                 </label>
                 <select
                   value={formData.gameType}
                   onChange={(e) => setFormData({ ...formData, gameType: e.target.value as any })}
-                  className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 focus:border-sky-500 focus:outline-none rounded-xl text-sm text-slate-100 font-medium"
+                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 focus:border-red-600 focus:outline-none rounded-xl text-sm text-slate-900 font-bold"
                 >
                   <option value="quiz">Quiz Pilihan Ganda (quiz)</option>
                   <option value="tap_reflex">Reflex Tap Challenge (tap_reflex)</option>
@@ -320,13 +320,13 @@ export default function AdminPostsPage() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="w-1/2 py-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:bg-slate-800 font-bold text-xs text-slate-400 uppercase"
+                  className="w-1/2 py-2.5 rounded-xl bg-slate-100 border border-slate-200 hover:bg-slate-200 font-bold text-xs text-slate-700 uppercase"
                 >
                   BATAL
                 </button>
                 <button
                   type="submit"
-                  className="w-1/2 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 font-bold text-xs text-white uppercase shadow-lg shadow-sky-950"
+                  className="w-1/2 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 font-extrabold text-xs text-white uppercase shadow-md shadow-red-600/20"
                 >
                   SIMPAN POS
                 </button>

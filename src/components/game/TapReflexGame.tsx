@@ -57,31 +57,31 @@ export default function TapReflexGame({
   };
 
   return (
-    <div className="w-full max-w-sm mx-auto p-4 sm:p-6 bg-slate-900/90 border border-slate-800 rounded-2xl shadow-2xl backdrop-blur-sm text-slate-100 flex flex-col items-center">
+    <div className="w-full max-w-sm mx-auto p-4 sm:p-6 bg-white border border-slate-200 rounded-2xl shadow-xl shadow-red-950/5 text-slate-900 flex flex-col items-center select-none">
       {/* Header */}
-      <div className="w-full flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
-        <h2 className="text-xs font-bold tracking-wider text-slate-200 uppercase truncate">
+      <div className="w-full flex items-center justify-between pb-3 mb-3 border-b border-slate-200">
+        <h2 className="text-xs font-bold tracking-wider text-slate-900 uppercase truncate">
           {postName} - {groupName}
         </h2>
-        <Zap className="w-4 h-4 text-amber-400" />
+        <Zap className="w-4 h-4 text-red-600" />
       </div>
 
       {gameState === "IDLE" && (
         <div className="text-center py-6 w-full flex flex-col items-center">
-          <div className="w-16 h-16 rounded-2xl bg-amber-950/60 border border-amber-800/80 flex items-center justify-center mb-4">
-            <Zap className="w-8 h-8 text-amber-400" />
+          <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center mb-4">
+            <Zap className="w-8 h-8 text-red-600" />
           </div>
-          <h3 className="text-base font-bold text-slate-100 uppercase mb-2">
+          <h3 className="text-base font-extrabold text-slate-900 uppercase mb-2">
             GAME KETANGKASAN REFLEX
           </h3>
-          <p className="text-xs text-slate-400 leading-relaxed mb-6 max-w-xs">
+          <p className="text-xs text-slate-600 leading-relaxed mb-6 max-w-xs font-medium">
             Ketuk tombol secepat mungkin dalam waktu {timeLimit} detik untuk mengumpulkan poin tertinggi kelompok Anda!
           </p>
 
           <button
             type="button"
             onClick={handleStart}
-            className="touch-btn w-full font-bold uppercase tracking-wider text-sm bg-amber-600 hover:bg-amber-500 active:bg-amber-700 text-slate-950 rounded-xl shadow-lg transition-all"
+            className="touch-btn w-full font-extrabold uppercase tracking-wider text-sm bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-xl shadow-lg shadow-red-600/20 transition-all"
           >
             MULAI GAME REFLEX
           </button>
@@ -91,51 +91,50 @@ export default function TapReflexGame({
       {gameState === "PLAYING" && (
         <div className="w-full flex flex-col items-center">
           {/* Timer & Score counter */}
-          <div className="w-full flex items-center justify-between px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl mb-4">
-            <div className="flex items-center gap-1.5 font-mono text-sm font-bold text-amber-400">
+          <div className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl mb-4">
+            <div className="flex items-center gap-1.5 font-mono text-sm font-bold text-red-600">
               <Clock className="w-4 h-4" />
               <span>{formatTime(timeLeft)}</span>
             </div>
-            <div className="text-sm font-bold text-slate-200">
-              TAP: <span className="text-sky-400 font-mono text-lg">{tapCount}</span>
+            <div className="text-sm font-bold text-slate-800">
+              TAP: <span className="text-red-600 font-mono text-lg font-black">{tapCount}</span>
             </div>
           </div>
 
-          {/* Huge Tap Target Button */}
+          {/* Big Interactive Tap Button */}
           <button
             type="button"
             onClick={handleTap}
-            className="w-full h-48 bg-gradient-to-b from-sky-600 to-sky-700 active:from-sky-500 active:to-sky-600 border-2 border-sky-400 rounded-2xl shadow-xl flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform select-none touch-manipulation"
+            className="w-48 h-48 rounded-full bg-gradient-to-tr from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 active:scale-95 text-white font-black text-2xl shadow-2xl shadow-red-600/30 flex flex-col items-center justify-center border-4 border-white transition-transform touch-manipulation my-4"
           >
-            <span className="text-2xl font-black tracking-widest text-white uppercase">
-              TAP SECEPATNYA!
-            </span>
-            <span className="text-xs font-semibold text-sky-200">
-              Jumlah Tap: {tapCount}
-            </span>
+            <Zap className="w-12 h-12 mb-1 animate-pulse fill-white" />
+            <span>KETUK!</span>
           </button>
         </div>
       )}
 
       {gameState === "FINISHED" && (
-        <div className="text-center py-4 w-full flex flex-col items-center">
-          <div className="w-14 h-14 rounded-2xl bg-sky-950 border border-sky-800 flex items-center justify-center mb-3">
-            <Trophy className="w-7 h-7 text-sky-400" />
+        <div className="text-center py-6 w-full flex flex-col items-center">
+          <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center mb-4">
+            <Trophy className="w-8 h-8 text-red-600" />
           </div>
-          <h3 className="text-base font-bold text-slate-100 uppercase mb-1">
+          <h3 className="text-base font-extrabold text-slate-900 uppercase mb-2">
             WAKTU HABIS!
           </h3>
-          <p className="text-xs text-slate-400 mb-4">
-            Total Tap: <span className="font-bold text-slate-200">{tapCount}x</span> | Poin Diperoleh: <span className="font-bold text-sky-400">{Math.min(100, tapCount * 2)} Poin</span>
+          <p className="text-xs text-slate-600 mb-1">
+            Jumlah Ketukan: <span className="font-bold text-slate-900">{tapCount} Kali</span>
+          </p>
+          <p className="text-sm font-black text-red-600 mb-6">
+            Poin Diperoleh: +{Math.min(100, tapCount * 2)} PTS
           </p>
 
           <button
             type="button"
             onClick={handleFinishSubmit}
             disabled={isSubmitting}
-            className="touch-btn w-full font-bold uppercase tracking-wider text-sm bg-sky-600 hover:bg-sky-500 text-white rounded-xl shadow-lg transition-all"
+            className="touch-btn w-full font-extrabold uppercase tracking-wider text-sm bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-lg transition-all"
           >
-            {isSubmitting ? "MEMPROSES..." : "SUBMIT SKOR POS"}
+            {isSubmitting ? "MEMPROSES..." : "SUBMIT SKOR KE KELOMPOK"}
           </button>
         </div>
       )}

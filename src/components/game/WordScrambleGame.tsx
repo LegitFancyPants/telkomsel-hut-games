@@ -83,33 +83,33 @@ export default function WordScrambleGame({
   };
 
   return (
-    <div className="w-full max-w-sm mx-auto p-4 sm:p-6 bg-slate-900/90 border border-slate-800 rounded-2xl shadow-2xl backdrop-blur-sm text-slate-100 flex flex-col items-center">
+    <div className="w-full max-w-sm mx-auto p-4 sm:p-6 bg-white border border-slate-200 rounded-2xl shadow-xl shadow-red-950/5 text-slate-900 flex flex-col items-center select-none">
       {/* Header */}
-      <div className="w-full flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
-        <h2 className="text-xs font-bold tracking-wider text-slate-200 uppercase truncate">
+      <div className="w-full flex items-center justify-between pb-3 mb-3 border-b border-slate-200">
+        <h2 className="text-xs font-bold tracking-wider text-slate-900 uppercase truncate">
           {postName} - {groupName}
         </h2>
-        <HelpCircle className="w-4 h-4 text-indigo-400" />
+        <HelpCircle className="w-4 h-4 text-red-600" />
       </div>
 
       {gameState === "IDLE" && (
         <div className="text-center py-6 w-full flex flex-col items-center">
-          <div className="w-16 h-16 rounded-2xl bg-indigo-950/60 border border-indigo-800 flex items-center justify-center mb-4">
-            <HelpCircle className="w-8 h-8 text-indigo-400" />
+          <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center mb-4">
+            <HelpCircle className="w-8 h-8 text-red-600" />
           </div>
-          <h3 className="text-base font-bold text-slate-100 uppercase mb-2">
-            GAME TEBAK KATA ACAK
+          <h3 className="text-base font-extrabold text-slate-900 uppercase mb-2">
+            ACAK KATA (WORD SCRAMBLE)
           </h3>
-          <p className="text-xs text-slate-400 leading-relaxed mb-6 max-w-xs">
-            Susun kata yang diacak menjadi kata yang tepat berdasarkan petunjuk dalam waktu {timeLimit} detik!
+          <p className="text-xs text-slate-600 leading-relaxed mb-6 max-w-xs font-medium">
+            Susun susunan huruf yang teracak menjadi kata yang tepat sesuai petunjuk dalam batas waktu {timeLimit} detik!
           </p>
 
           <button
             type="button"
             onClick={handleStart}
-            className="touch-btn w-full font-bold uppercase tracking-wider text-sm bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg transition-all"
+            className="touch-btn w-full font-extrabold uppercase tracking-wider text-sm bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-lg shadow-red-600/20 transition-all"
           >
-            MULAI TEBAK KATA
+            MULAI ACAK KATA
           </button>
         </div>
       )}
@@ -117,66 +117,48 @@ export default function WordScrambleGame({
       {gameState === "PLAYING" && currentItem && (
         <div className="w-full flex flex-col items-center">
           {/* Header Bar */}
-          <div className="w-full flex items-center justify-between px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl mb-4">
-            <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-indigo-400">
+          <div className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl mb-4">
+            <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-red-600">
               <Clock className="w-3.5 h-3.5" />
               <span>{formatTime(timeLeft)}</span>
             </div>
-            <div className="text-xs font-bold text-slate-300">
-              KATA <span className="font-mono text-sky-400">{currentIndex + 1}/{WORDS.length}</span>
+
+            <div className="text-xs font-semibold text-slate-600">
+              Soal <strong className="text-slate-900 font-mono">{currentIndex + 1}</strong> dari {WORDS.length}
             </div>
           </div>
 
-          {/* Clue Card */}
-          <div className="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl text-center mb-3">
-            <span className="text-[11px] font-bold text-indigo-400 uppercase tracking-wider block mb-1">
-              PETUNJUK / CLUE:
+          {/* Scramble Display Card */}
+          <div className="w-full p-5 mb-4 bg-slate-50 border border-slate-200 rounded-2xl text-center shadow-inner">
+            <span className="text-[10px] font-bold text-red-600 uppercase tracking-widest block mb-1">
+              SUSUNAN HURUF TERACAK:
             </span>
-            <p className="text-xs font-medium text-slate-200">
-              "{currentItem.clue}"
+            <h3 className="text-xl sm:text-2xl font-black font-mono tracking-widest text-slate-900 mb-3">
+              {currentItem.scrambled}
+            </h3>
+            <p className="text-xs text-slate-600 italic bg-white p-2 rounded-lg border border-slate-200">
+              Clue: "{currentItem.clue}"
             </p>
           </div>
 
-          {/* Scrambled Word Tile Display */}
-          <div className="w-full py-4 px-3 bg-indigo-950/40 border border-indigo-800/80 rounded-2xl text-center mb-4">
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block mb-1">
-              KATA ACAK:
-            </span>
-            <span className="font-mono font-black text-xl text-indigo-200 tracking-widest uppercase">
-              {currentItem.scrambled}
-            </span>
-          </div>
-
           {/* Guess Input */}
-          <div className="w-full mb-4">
+          <div className="w-full space-y-3 mb-6">
             <input
               type="text"
               value={userGuess}
               onChange={(e) => setUserGuess(e.target.value.toUpperCase())}
-              placeholder="Ketik jawaban Anda..."
-              className="w-full px-4 py-3 bg-slate-950 border-2 border-indigo-500/80 focus:border-indigo-400 focus:outline-none rounded-xl text-center font-mono font-bold text-lg uppercase tracking-wider text-slate-100 placeholder:text-slate-600 placeholder:font-sans placeholder:text-xs"
+              placeholder="KETIK KATA JAWABAN..."
+              className="w-full text-center px-4 py-3 bg-slate-50 border border-slate-300 focus:border-red-600 focus:outline-none rounded-xl text-base font-black font-mono tracking-widest uppercase text-slate-900"
             />
-          </div>
-
-          {/* Buttons */}
-          <div className="w-full grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => setUserGuess("")}
-              className="touch-btn bg-slate-950 border border-slate-800 hover:bg-slate-800 text-xs font-bold text-slate-400 uppercase rounded-xl flex items-center justify-center gap-1.5"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>RESET</span>
-            </button>
 
             <button
               type="button"
               onClick={handleCheck}
-              disabled={!userGuess}
-              className="touch-btn bg-indigo-600 hover:bg-indigo-500 text-xs font-bold uppercase text-white rounded-xl flex items-center justify-center gap-1.5 disabled:opacity-40"
+              disabled={!userGuess.trim()}
+              className="touch-btn w-full font-extrabold uppercase tracking-wider text-xs bg-red-600 hover:bg-red-700 active:bg-red-800 disabled:opacity-40 text-white rounded-xl shadow-md flex items-center justify-center gap-2"
             >
-              <span>SUBMIT</span>
-              <Check className="w-4 h-4 stroke-[3]" />
+              <span>SUBMIT KATA</span>
+              <Check className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -184,23 +166,26 @@ export default function WordScrambleGame({
 
       {gameState === "FINISHED" && (
         <div className="text-center py-4 w-full flex flex-col items-center">
-          <div className="w-14 h-14 rounded-2xl bg-indigo-950 border border-indigo-800 flex items-center justify-center mb-3">
-            <Trophy className="w-7 h-7 text-indigo-400" />
+          <div className="w-14 h-14 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center mb-3">
+            <Trophy className="w-7 h-7 text-red-600" />
           </div>
-          <h3 className="text-base font-bold text-slate-100 uppercase mb-1">
+          <h3 className="text-base font-extrabold text-slate-900 uppercase mb-1">
             PERMAINAN SELESAI!
           </h3>
-          <p className="text-xs text-slate-400 mb-4">
-            Kata Benar: <span className="font-bold text-slate-200">{solvedCount}/{WORDS.length}</span> | Poin Diperoleh: <span className="font-bold text-indigo-400">{calculateScore()} Poin</span>
+          <p className="text-xs text-slate-600 mb-1">
+            Kata Tepat Terjawab: <span className="font-bold text-slate-900">{solvedCount} dari {WORDS.length}</span>
+          </p>
+          <p className="text-sm font-black text-red-600 mb-4">
+            Total Poin Diperoleh: +{calculateScore()} PTS
           </p>
 
           <button
             type="button"
             onClick={() => onSubmitWordScore(calculateScore())}
             disabled={isSubmitting}
-            className="touch-btn w-full font-bold uppercase tracking-wider text-sm bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg transition-all"
+            className="touch-btn w-full font-extrabold uppercase tracking-wider text-sm bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-lg transition-all"
           >
-            {isSubmitting ? "MEMPROSES..." : "SUBMIT SKOR POS"}
+            {isSubmitting ? "MEMPROSES..." : "SUBMIT SKOR KE KELOMPOK"}
           </button>
         </div>
       )}

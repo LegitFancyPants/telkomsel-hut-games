@@ -22,18 +22,18 @@ export default function GroupSelector({ postName, groups, onSelectGroup }: Group
   };
 
   return (
-    <div className="w-full max-w-sm mx-auto p-4 sm:p-6 bg-slate-900/90 border border-slate-800 rounded-2xl shadow-2xl backdrop-blur-sm text-slate-100 flex flex-col">
-      {/* Header Info (Wireframe 2) */}
-      <div className="w-full flex items-center justify-between pb-4 mb-4 border-b border-slate-800">
-        <h2 className="text-sm font-bold tracking-wide text-slate-200 uppercase">
+    <div className="w-full max-w-sm mx-auto p-4 sm:p-6 bg-white border border-slate-200 rounded-2xl shadow-xl shadow-red-950/5 text-slate-900 flex flex-col">
+      {/* Header Info */}
+      <div className="w-full flex items-center justify-between pb-4 mb-4 border-b border-slate-200">
+        <h2 className="text-sm font-bold tracking-wide text-slate-900 uppercase">
           {postName} - KELOMPOK
         </h2>
-        <Users className="w-5 h-5 text-sky-400" />
+        <Users className="w-5 h-5 text-red-600" />
       </div>
 
       {/* Subtitle */}
       <div className="mb-4">
-        <h3 className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
+        <h3 className="text-xs font-bold tracking-wider text-red-600 uppercase">
           PILIH KELOMPOK ANDA
         </h3>
         <p className="text-[11px] text-slate-500 font-normal">
@@ -41,7 +41,7 @@ export default function GroupSelector({ postName, groups, onSelectGroup }: Group
         </p>
       </div>
 
-      {/* Group List Cards (Wireframe 2) */}
+      {/* Group List Cards */}
       <div className="space-y-2.5 mb-6 max-h-[320px] overflow-y-auto pr-1">
         {groups.map((group) => {
           const isSelected = selectedGroupId === group.id;
@@ -52,21 +52,21 @@ export default function GroupSelector({ postName, groups, onSelectGroup }: Group
               onClick={() => setSelectedGroupId(group.id)}
               className={`w-full p-3.5 rounded-xl border text-left flex items-center justify-between transition-all touch-btn ${
                 isSelected
-                  ? "bg-sky-950/60 border-sky-500 text-sky-200 shadow-md ring-1 ring-sky-500/50"
-                  : "bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-900/80"
+                  ? "bg-red-50 border-red-600 text-red-700 shadow-md ring-1 ring-red-600/30"
+                  : "bg-slate-50 border-slate-200 text-slate-800 hover:border-slate-300 hover:bg-slate-100"
               }`}
             >
               <div className="flex items-center gap-3">
                 <div
                   className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
                     isSelected
-                      ? "border-sky-500 bg-sky-500 text-slate-950"
-                      : "border-slate-600 bg-transparent"
+                      ? "border-red-600 bg-red-600 text-white"
+                      : "border-slate-300 bg-transparent"
                   }`}
                 >
                   {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                 </div>
-                <span className="font-semibold text-sm tracking-wide">
+                <span className="font-bold text-sm tracking-wide">
                   {group.name}
                 </span>
               </div>
@@ -80,7 +80,7 @@ export default function GroupSelector({ postName, groups, onSelectGroup }: Group
         type="button"
         onClick={handleConfirm}
         disabled={!selectedGroupId}
-        className="touch-btn w-full font-bold uppercase tracking-wider text-sm bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-sky-950/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+        className="touch-btn w-full font-extrabold uppercase tracking-wider text-sm bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-red-600/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
       >
         <span>MULAI PERMAINAN</span>
         <ArrowRight className="w-4 h-4" />

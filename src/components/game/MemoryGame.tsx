@@ -200,38 +200,38 @@ export default function MemoryGame({
   };
 
   return (
-    <div className="w-full max-w-md mx-auto p-4 sm:p-6 bg-slate-900/90 border border-slate-800 rounded-2xl shadow-2xl backdrop-blur-sm text-slate-100 flex flex-col items-center select-none">
+    <div className="w-full max-w-md mx-auto p-4 sm:p-6 bg-white border border-slate-200 rounded-2xl shadow-xl shadow-red-950/5 text-slate-900 flex flex-col items-center select-none">
       {/* Header */}
-      <div className="w-full flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
-        <h2 className="text-xs font-bold tracking-wider text-slate-200 uppercase truncate">
+      <div className="w-full flex items-center justify-between pb-3 mb-3 border-b border-slate-200">
+        <h2 className="text-xs font-bold tracking-wider text-slate-900 uppercase truncate">
           {postName} - {groupName}
         </h2>
-        <Eye className="w-4 h-4 text-sky-400" />
+        <Eye className="w-4 h-4 text-red-600" />
       </div>
 
       {gameState === "IDLE" && (
         <div className="text-center py-6 w-full flex flex-col items-center">
-          <div className="w-16 h-16 rounded-2xl bg-sky-950/60 border border-sky-800 flex items-center justify-center mb-4">
-            <Eye className="w-8 h-8 text-sky-400" />
+          <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center mb-4">
+            <Eye className="w-8 h-8 text-red-600" />
           </div>
-          <h3 className="text-base font-bold text-slate-100 uppercase mb-2">
+          <h3 className="text-base font-extrabold text-slate-900 uppercase mb-2">
             GAME MEMORY MATCH (5 STAGE)
           </h3>
-          <p className="text-xs text-slate-400 leading-relaxed mb-4 max-w-xs">
-            Waktu: <span className="font-bold text-sky-400">5 Menit</span> | Selesaikan hingga <span className="font-bold text-amber-400">Stage 5 (Grid 4x6)</span>!
+          <p className="text-xs text-slate-600 leading-relaxed mb-4 max-w-xs font-medium">
+            Waktu: <span className="font-bold text-red-600">5 Menit</span> | Selesaikan hingga <span className="font-bold text-red-600">Stage 5 (Grid 4x6)</span>!
           </p>
-          <div className="flex flex-wrap justify-center gap-1.5 text-[10px] text-slate-400 mb-6 font-mono">
-            <span className="px-2 py-0.5 rounded bg-slate-950 border border-slate-800">S1: 2x2</span>
-            <span className="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-sky-300 font-bold">S2: 2x4</span>
-            <span className="px-2 py-0.5 rounded bg-slate-950 border border-slate-800">S3: 4x4</span>
-            <span className="px-2 py-0.5 rounded bg-slate-950 border border-slate-800">S4: 4x5</span>
-            <span className="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-amber-400 font-bold">S5: 4x6</span>
+          <div className="flex flex-wrap justify-center gap-1.5 text-[10px] text-slate-600 mb-6 font-mono font-bold">
+            <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200">S1: 2x2</span>
+            <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200">S2: 2x4</span>
+            <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200">S3: 4x4</span>
+            <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200">S4: 4x5</span>
+            <span className="px-2 py-0.5 rounded bg-red-50 border border-red-200 text-red-600 font-extrabold">S5: 4x6</span>
           </div>
 
           <button
             type="button"
             onClick={handleStartGame}
-            className="touch-btn w-full font-bold uppercase tracking-wider text-sm bg-sky-600 hover:bg-sky-500 text-white rounded-xl shadow-lg transition-all"
+            className="touch-btn w-full font-extrabold uppercase tracking-wider text-sm bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-lg shadow-red-600/20 transition-all"
           >
             MULAI GAME MEMORI (STAGE 1)
           </button>
@@ -241,37 +241,37 @@ export default function MemoryGame({
       {(gameState === "PLAYING" || gameState === "STAGE_CLEAR") && (
         <div className="w-full flex flex-col items-center">
           {/* Header Bar */}
-          <div className="w-full flex items-center justify-between px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl mb-3">
-            <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-sky-400">
+          <div className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl mb-3">
+            <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-red-600">
               <Clock className="w-3.5 h-3.5" />
               <span>{formatTime(timeLeft)}</span>
             </div>
 
-            <div className="text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-sky-950 border border-sky-800 text-sky-300">
+            <div className="text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-red-50 border border-red-200 text-red-700">
               STAGE {currentStage} / 5
             </div>
 
-            <div className="text-xs font-mono font-bold text-amber-400">
+            <div className="text-xs font-mono font-black text-slate-900">
               {accumulatedPoints} PTS
             </div>
           </div>
 
           {/* Grid Layouts depending on Stage */}
           {gameState === "STAGE_CLEAR" ? (
-            <div className="w-full py-8 px-4 bg-slate-950 border border-slate-800 rounded-2xl text-center mb-4 flex flex-col items-center">
-              <div className="w-12 h-12 rounded-xl bg-emerald-950 border border-emerald-800 flex items-center justify-center text-emerald-400 mb-3">
+            <div className="w-full py-8 px-4 bg-slate-50 border border-slate-200 rounded-2xl text-center mb-4 flex flex-col items-center">
+              <div className="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 mb-3">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
-              <h3 className="text-sm font-black uppercase text-emerald-400 mb-1">
+              <h3 className="text-sm font-black uppercase text-emerald-600 mb-1">
                 STAGE {currentStage} SELESAI!
               </h3>
-              <p className="text-xs text-slate-300 mb-4">
-                Poin Terkumpul: <span className="font-bold text-amber-400">+{accumulatedPoints} PTS</span>
+              <p className="text-xs text-slate-700 mb-4">
+                Poin Terkumpul: <span className="font-bold text-red-600">+{accumulatedPoints} PTS</span>
               </p>
               <button
                 type="button"
                 onClick={handleNextStage}
-                className="touch-btn w-full font-bold uppercase text-xs bg-sky-600 hover:bg-sky-500 text-white rounded-xl flex items-center justify-center gap-2 shadow-lg"
+                className="touch-btn w-full font-extrabold uppercase text-xs bg-red-600 hover:bg-red-700 text-white rounded-xl flex items-center justify-center gap-2 shadow-md"
               >
                 <span>
                   LANJUT KE STAGE {currentStage + 1} (
@@ -289,7 +289,7 @@ export default function MemoryGame({
             </div>
           ) : (
             <div
-              className={`w-full grid gap-2 mb-4 p-2 bg-slate-950 border border-slate-800 rounded-2xl ${
+              className={`w-full grid gap-2 mb-4 p-2 bg-slate-50 border border-slate-200 rounded-2xl ${
                 currentStage === 1
                   ? "grid-cols-2 max-w-[200px]"
                   : currentStage === 2
@@ -313,16 +313,16 @@ export default function MemoryGame({
                     disabled={card.isMatched}
                     className={`h-16 sm:h-20 rounded-xl border-2 font-bold flex flex-col items-center justify-center transition-all duration-300 select-none ${
                       card.isMatched
-                        ? "bg-emerald-950/60 border-emerald-500 text-emerald-300 opacity-80"
+                        ? "bg-emerald-50 border-emerald-500 text-emerald-600 opacity-90 shadow-sm"
                         : isShow
-                        ? "bg-sky-950 border-sky-400 text-sky-200 shadow-md scale-95"
-                        : "bg-slate-900 border-slate-800 hover:border-slate-700 text-slate-600"
+                        ? "bg-red-50 border-red-600 text-red-600 shadow-md scale-95"
+                        : "bg-white border-slate-300 hover:border-slate-400 text-slate-400 shadow-sm"
                     }`}
                   >
                     {isShow ? (
                       <SymbolIcon className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2]" />
                     ) : (
-                      <span className="text-xs font-black font-mono text-slate-700">?</span>
+                      <span className="text-xs font-black font-mono text-slate-400">?</span>
                     )}
                   </button>
                 );
@@ -334,16 +334,16 @@ export default function MemoryGame({
 
       {gameState === "FINISHED" && (
         <div className="text-center py-4 w-full flex flex-col items-center">
-          <div className="w-14 h-14 rounded-2xl bg-sky-950 border border-sky-800 flex items-center justify-center mb-3">
-            <Trophy className="w-7 h-7 text-sky-400" />
+          <div className="w-14 h-14 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center mb-3">
+            <Trophy className="w-7 h-7 text-red-600" />
           </div>
-          <h3 className="text-base font-bold text-slate-100 uppercase mb-1">
+          <h3 className="text-base font-extrabold text-slate-900 uppercase mb-1">
             PERMAINAN SELESAI!
           </h3>
-          <p className="text-xs text-slate-400 mb-1">
-            Stage Dicapai: <span className="font-bold text-slate-200">{currentStage} / 5 Stage</span>
+          <p className="text-xs text-slate-600 mb-1">
+            Stage Dicapai: <span className="font-bold text-slate-900">{currentStage} / 5 Stage</span>
           </p>
-          <p className="text-sm font-extrabold text-amber-400 mb-4">
+          <p className="text-sm font-black text-red-600 mb-4">
             Total Poin Diperoleh: +{accumulatedPoints} PTS
           </p>
           <p className="text-[11px] text-slate-500 mb-4 leading-relaxed">
@@ -354,7 +354,7 @@ export default function MemoryGame({
             type="button"
             onClick={handleFinishSubmit}
             disabled={isSubmitting}
-            className="touch-btn w-full font-bold uppercase tracking-wider text-sm bg-sky-600 hover:bg-sky-500 text-white rounded-xl shadow-lg transition-all"
+            className="touch-btn w-full font-extrabold uppercase tracking-wider text-sm bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-lg transition-all"
           >
             {isSubmitting ? "MEMPROSES..." : "SUBMIT SKOR KE KELOMPOK"}
           </button>
