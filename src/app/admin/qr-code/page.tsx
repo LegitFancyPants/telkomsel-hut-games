@@ -42,7 +42,7 @@ export default function QrGeneratorPage() {
           width: 300,
           margin: 2,
           color: {
-            dark: "#b91c1c",
+            dark: "#000000", // Standard classic black QR code
             light: "#ffffff",
           },
         });
@@ -130,9 +130,9 @@ export default function QrGeneratorPage() {
                   </span>
                 </div>
 
-                {/* QR Image */}
+                {/* QR Image - Classic Black */}
                 {item.qrDataUrl && (
-                  <div className="p-3 bg-white border-2 border-red-100 rounded-2xl mb-4 shadow-sm">
+                  <div className="p-3 bg-white border-2 border-slate-200 rounded-2xl mb-4 shadow-sm">
                     <img
                       src={item.qrDataUrl}
                       alt={`QR Code ${item.name}`}
