@@ -317,6 +317,7 @@ export default function AdminGamesPage() {
                   {selectedPost.gameType === "speed_math" && <Calculator className="w-5 h-5 text-red-600" />}
                   {selectedPost.gameType === "word_scramble" && <HelpCircle className="w-5 h-5 text-red-600" />}
                   {selectedPost.gameType === "snake" && <Activity className="w-5 h-5 text-red-600" />}
+                  {selectedPost.gameType === "endless_runner" && <Zap className="w-5 h-5 text-red-600" />}
                   <div>
                     <h4 className="font-bold text-sm text-slate-900 uppercase">{selectedPost.gameType}</h4>
                     <p className="text-[11px] text-slate-500 font-mono">Batas Waktu: {selectedPost.timeLimit}s</p>

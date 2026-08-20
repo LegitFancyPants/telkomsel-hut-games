@@ -22,7 +22,7 @@ model Post {
   name        String     
   slug        String       @unique
   pinCode     String     
-  gameType    String       @default("quiz") // "quiz" | "tap_reflex" | "memory_match" | "speed_math" | "word_scramble" | "snake"
+  gameType    String       @default("quiz") // "quiz" | "tap_reflex" | "memory_match" | "speed_math" | "word_scramble" | "snake" | "endless_runner"
   timeLimit   Int          @default(60) 
   isActive    Boolean      @default(true) 
   questions   Question[]

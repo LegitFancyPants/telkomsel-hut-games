@@ -11,6 +11,7 @@ import MemoryGame from "@/components/game/MemoryGame";
 import SpeedMathGame from "@/components/game/SpeedMathGame";
 import WordScrambleGame from "@/components/game/WordScrambleGame";
 import SnakeGame from "@/components/game/SnakeGame";
+import EndlessRunnerGame from "@/components/game/EndlessRunnerGame";
 import { GroupData, PostData } from "@/lib/store";
 import { CheckCircle2, Trophy, AlertCircle } from "lucide-react";
 
@@ -248,6 +249,14 @@ export default function PosPage() {
                 groupName={selectedGroup.name}
                 timeLimit={postData.timeLimit}
                 onSubmitSnakeScore={(score) => handleSubmitGame({ scoreOverride: score })}
+                isSubmitting={isLoading}
+              />
+            ) : postData.gameType === "endless_runner" ? (
+              <EndlessRunnerGame
+                postName={postData.name}
+                groupName={selectedGroup.name}
+                timeLimit={postData.timeLimit}
+                onSubmitRunnerScore={(score) => handleSubmitGame({ scoreOverride: score })}
                 isSubmitting={isLoading}
               />
             ) : (

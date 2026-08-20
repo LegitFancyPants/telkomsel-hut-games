@@ -12,7 +12,7 @@ export interface PostData {
   name: string;
   slug: string;
   pinCode: string;
-  gameType: "quiz" | "tap_reflex" | "memory_match" | "speed_math" | "word_scramble" | "snake";
+  gameType: "quiz" | "tap_reflex" | "memory_match" | "speed_math" | "word_scramble" | "snake" | "endless_runner";
   timeLimit: number;
   isActive: boolean;
 }

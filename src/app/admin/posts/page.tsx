@@ -313,6 +313,7 @@ export default function AdminPostsPage() {
                   <option value="speed_math">Speed Math Challenge (speed_math)</option>
                   <option value="word_scramble">Word Unscramble (word_scramble)</option>
                   <option value="snake">Classic Snake Challenge (snake)</option>
+                  <option value="endless_runner">2D Endless Runner (endless_runner)</option>
                 </select>
               </div>
 
