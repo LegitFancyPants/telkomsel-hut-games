@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Trophy, RefreshCw, Activity, ArrowUp, Zap, Sparkles } from "lucide-react";
+import { Trophy, RefreshCw, Activity, ArrowUp, ArrowDown, Zap, ShieldAlert, Sparkles } from "lucide-react";
 
 interface EndlessRunnerGameProps {
   postName: string;
@@ -16,7 +16,7 @@ interface Obstacle {
   y: number;
   width: number;
   height: number;
-  type: "GROUND_SMALL" | "GROUND_TALL" | "GROUND_DOUBLE" | "FLYING";
+  type: "GROUND_SMALL" | "GROUND_TALL" | "GROUND_DOUBLE" | "GROUND_TRIPLE" | "FLYING_LOW" | "FLYING_HIGH";
 }
 
 export default function EndlessRunnerGame({
@@ -29,7 +29,6 @@ export default function EndlessRunnerGame({
 
   const [gameState, setGameState] = useState<"IDLE" | "PLAYING" | "FINISHED">("IDLE");
   const [distanceMeters, setDistanceMeters] = useState(0);
-  const [highScoreMeters, setHighScoreMeters] = useState(0);
   const [pointsEarned, setPointsEarned] = useState(0);
 
   // Mutable Game Engine Refs for 60fps Loop
@@ -40,12 +39,13 @@ export default function EndlessRunnerGame({
     distance: 0,
     // Runner Physics
     runnerX: 60,
-    runnerY: 170, // Ground level Y (Canvas height 240 - runner height 40 - ground 30)
+    runnerY: 170, // Ground Y
     runnerVY: 0,
     isJumping: false,
+    isDucking: false,
     groundY: 170,
-    gravity: 0.65,
-    jumpForce: -13.5,
+    gravity: 0.68,
+    jumpForce: -13.8,
     legFrame: 0,
     // Obstacles
     obstacles: [] as Obstacle[],
@@ -60,13 +60,22 @@ export default function EndlessRunnerGame({
     if (!engine.isJumping) {
       engine.runnerVY = engine.jumpForce;
       engine.isJumping = true;
+      engine.isDucking = false;
     }
   }, []);
 
-  // Keyboard controls
+  const setDucking = useCallback((ducking: boolean) => {
+    const engine = engineRef.current;
+    if (!engine.isRunning) return;
+    if (!engine.isJumping) {
+      engine.isDucking = ducking;
+    }
+  }, []);
+
+  // Keyboard controls (Jump & Duck)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === "Space" || e.code === "ArrowUp") {
+      if (e.code === "Space" || e.code === "ArrowUp" || e.code === "KeyW") {
         e.preventDefault();
         if (gameState === "PLAYING") {
           jump();
@@ -74,12 +83,29 @@ export default function EndlessRunnerGame({
           handleStart();
         }
       }
+      if (e.code === "ArrowDown" || e.code === "KeyS") {
+        e.preventDefault();
+        if (gameState === "PLAYING") {
+          setDucking(true);
+        }
+      }
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [gameState, jump]);
 
-  // Spawn clouds
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === "ArrowDown" || e.code === "KeyS") {
+        setDucking(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, [gameState, jump, setDucking]);
+
+  // Spawn initial background clouds
   const initClouds = () => {
     return [
       { x: 100, y: 30, speed: 0.8 },
@@ -96,6 +122,7 @@ export default function EndlessRunnerGame({
     engine.runnerY = 170;
     engine.runnerVY = 0;
     engine.isJumping = false;
+    engine.isDucking = false;
     engine.obstacles = [];
     engine.nextObstacleTimer = 60;
     engine.clouds = initClouds();
@@ -105,7 +132,7 @@ export default function EndlessRunnerGame({
     setGameState("PLAYING");
   };
 
-  // Main Render Loop
+  // Main Render Loop (60 FPS)
   useEffect(() => {
     if (gameState !== "PLAYING") return;
 
@@ -126,12 +153,12 @@ export default function EndlessRunnerGame({
       const engine = engineRef.current;
       if (!engine.isRunning) return;
 
-      // 1. Update Physics & World
+      // 1. Dynamic Physics & Progressive Difficulty Speed Scaling
       engine.distance += engine.speed * 0.15;
       const currentDist = Math.floor(engine.distance);
 
-      // Increase speed gradually every 100 meters
-      engine.speed = 6.0 + Math.min(6, Math.floor(currentDist / 100) * 0.6);
+      // Speed increases progressively over time/distance up to 14.5x
+      engine.speed = 6.0 + Math.min(8.5, Math.floor(currentDist / 60) * 0.55);
 
       // Runner Jump & Gravity
       engine.runnerY += engine.runnerVY;
@@ -143,7 +170,7 @@ export default function EndlessRunnerGame({
         engine.isJumping = false;
       }
 
-      engine.legFrame = (engine.legFrame + 0.25) % 4;
+      engine.legFrame = (engine.legFrame + (engine.speed / 6) * 0.25) % 4;
 
       // Move Clouds
       engine.clouds.forEach((cloud) => {
@@ -151,30 +178,92 @@ export default function EndlessRunnerGame({
         if (cloud.x < -80) cloud.x = CANVAS_WIDTH + 40;
       });
 
-      // Spawn Obstacles
+      // Spawn Varied Obstacle Patterns based on Distance Phase
       engine.nextObstacleTimer -= 1;
       if (engine.nextObstacleTimer <= 0) {
-        const randType = Math.random();
+        const rand = Math.random();
         let obsType: Obstacle["type"] = "GROUND_SMALL";
         let obsW = 22;
         let obsH = 36;
         let obsY = GROUND_LEVEL - obsH;
 
-        if (randType > 0.75) {
-          obsType = "GROUND_TALL";
-          obsW = 24;
-          obsH = 46;
-          obsY = GROUND_LEVEL - obsH;
-        } else if (randType > 0.5) {
-          obsType = "GROUND_DOUBLE";
-          obsW = 42;
-          obsH = 36;
-          obsY = GROUND_LEVEL - obsH;
-        } else if (randType > 0.35 && currentDist > 50) {
-          obsType = "FLYING";
-          obsW = 32;
-          obsH = 22;
-          obsY = GROUND_LEVEL - 65; // Must jump under or clear
+        if (currentDist < 80) {
+          // Phase 1 (0-80m): Single Small & Tall Cacti
+          if (rand > 0.6) {
+            obsType = "GROUND_TALL";
+            obsW = 24;
+            obsH = 46;
+            obsY = GROUND_LEVEL - obsH;
+          }
+        } else if (currentDist < 200) {
+          // Phase 2 (80-200m): Add Double Cacti & Low Flying Drones (Jump over)
+          if (rand > 0.7) {
+            obsType = "GROUND_DOUBLE";
+            obsW = 44;
+            obsH = 36;
+            obsY = GROUND_LEVEL - obsH;
+          } else if (rand > 0.45) {
+            obsType = "FLYING_LOW";
+            obsW = 32;
+            obsH = 20;
+            obsY = GROUND_LEVEL - 34; // Must jump over
+          } else if (rand > 0.25) {
+            obsType = "GROUND_TALL";
+            obsW = 24;
+            obsH = 46;
+            obsY = GROUND_LEVEL - obsH;
+          }
+        } else if (currentDist < 450) {
+          // Phase 3 (200-450m): Add High Flying Drones (Must DUCK under!)
+          if (rand > 0.75) {
+            obsType = "FLYING_HIGH";
+            obsW = 34;
+            obsH = 22;
+            obsY = GROUND_LEVEL - 58; // High altitude -> Must DUCK under!
+          } else if (rand > 0.5) {
+            obsType = "GROUND_DOUBLE";
+            obsW = 44;
+            obsH = 36;
+            obsY = GROUND_LEVEL - obsH;
+          } else if (rand > 0.25) {
+            obsType = "FLYING_LOW";
+            obsW = 32;
+            obsH = 20;
+            obsY = GROUND_LEVEL - 34;
+          } else {
+            obsType = "GROUND_TALL";
+            obsW = 24;
+            obsH = 48;
+            obsY = GROUND_LEVEL - obsH;
+          }
+        } else {
+          // Phase 4 (450m+): Triple Cacti, Rapid Flying Drones, Chaotic Mix
+          if (rand > 0.8) {
+            obsType = "GROUND_TRIPLE";
+            obsW = 62;
+            obsH = 36;
+            obsY = GROUND_LEVEL - obsH;
+          } else if (rand > 0.6) {
+            obsType = "FLYING_HIGH";
+            obsW = 36;
+            obsH = 22;
+            obsY = GROUND_LEVEL - 58;
+          } else if (rand > 0.35) {
+            obsType = "FLYING_LOW";
+            obsW = 32;
+            obsH = 20;
+            obsY = GROUND_LEVEL - 34;
+          } else if (rand > 0.15) {
+            obsType = "GROUND_DOUBLE";
+            obsW = 44;
+            obsH = 38;
+            obsY = GROUND_LEVEL - obsH;
+          } else {
+            obsType = "GROUND_TALL";
+            obsW = 26;
+            obsH = 50;
+            obsY = GROUND_LEVEL - obsH;
+          }
         }
 
         engine.obstacles.push({
@@ -185,9 +274,10 @@ export default function EndlessRunnerGame({
           type: obsType,
         });
 
-        // Min gap between obstacles decreases with speed
-        const minGap = Math.max(50, 110 - Math.floor(engine.speed * 4));
-        engine.nextObstacleTimer = minGap + Math.floor(Math.random() * 45);
+        // Min gap between obstacles shrinks progressively as speed/distance increases
+        const baseGap = Math.max(30, 115 - Math.floor(engine.speed * 5.5));
+        const randomVar = Math.floor(Math.random() * (40 - Math.min(25, Math.floor(currentDist / 40))));
+        engine.nextObstacleTimer = baseGap + Math.max(10, randomVar);
       }
 
       // Move & Filter Obstacles
@@ -196,12 +286,15 @@ export default function EndlessRunnerGame({
       });
       engine.obstacles = engine.obstacles.filter((obs) => obs.x + obs.width > -10);
 
-      // Collision Detection (Hitbox)
+      // Collision Detection Hitbox (Adjusted for Ducking vs Jumping stance)
+      const currentHeight = engine.isDucking ? 20 : RUNNER_HEIGHT - 6;
+      const currentY = engine.isDucking ? engine.runnerY + 18 : engine.runnerY + 4;
+
       const runnerBox = {
         x: engine.runnerX + 4,
-        y: engine.runnerY + 4,
-        w: RUNNER_WIDTH - 8,
-        h: RUNNER_HEIGHT - 6,
+        y: currentY,
+        w: RUNNER_WIDTH - 6,
+        h: currentHeight,
       };
 
       let hasCrashed = false;
@@ -230,7 +323,6 @@ export default function EndlessRunnerGame({
         const finalScore = finalDist * 10; // 1 meter = 10 PTS
         setDistanceMeters(finalDist);
         setPointsEarned(finalScore);
-        setHighScoreMeters((prev) => Math.max(prev, finalDist));
         setGameState("FINISHED");
         return;
       }
@@ -271,33 +363,33 @@ export default function EndlessRunnerGame({
         ctx.fillRect(x + 20, GROUND_LEVEL + 14, 8, 2);
       }
 
-      // Draw Obstacles (Cacti / Hurdles)
+      // Draw Obstacles
       engine.obstacles.forEach((obs) => {
-        if (obs.type === "FLYING") {
+        if (obs.type === "FLYING_HIGH" || obs.type === "FLYING_LOW") {
           // Flying Bird / Drone
-          ctx.fillStyle = "#dc2626"; // Red bird
+          ctx.fillStyle = obs.type === "FLYING_HIGH" ? "#9333ea" : "#dc2626"; // Purple for High Drone, Red for Low
           ctx.beginPath();
-          ctx.ellipse(obs.x + 16, obs.y + 11, 14, 8, 0, 0, Math.PI * 2);
+          ctx.ellipse(obs.x + obs.width / 2, obs.y + obs.height / 2, obs.width / 2, obs.height / 2 - 2, 0, 0, Math.PI * 2);
           ctx.fill();
 
           // Wing flapping
-          const wingY = Math.sin(engine.distance * 0.5) * 8;
-          ctx.fillStyle = "#991b1b";
+          const wingY = Math.sin(engine.distance * 0.6) * 7;
+          ctx.fillStyle = obs.type === "FLYING_HIGH" ? "#6b21a8" : "#991b1b";
           ctx.beginPath();
-          ctx.moveTo(obs.x + 12, obs.y + 10);
+          ctx.moveTo(obs.x + 10, obs.y + 10);
           ctx.lineTo(obs.x + 2, obs.y + 2 + wingY);
           ctx.lineTo(obs.x + 18, obs.y + 10);
           ctx.fill();
         } else {
           // Ground Cactus / Hurdle
-          ctx.fillStyle = "#16a34a"; // Green Cactus
+          ctx.fillStyle = obs.type === "GROUND_TRIPLE" ? "#15803d" : "#16a34a"; // Darker green for Triple
           const radius = 4;
           ctx.beginPath();
           ctx.roundRect(obs.x, obs.y, obs.width, obs.height, radius);
           ctx.fill();
 
           // Cactus details (arms)
-          ctx.fillStyle = "#15803d";
+          ctx.fillStyle = "#14532d";
           ctx.fillRect(obs.x + 3, obs.y + 8, obs.width - 6, 4);
 
           // Red Flag top decoration
@@ -312,7 +404,7 @@ export default function EndlessRunnerGame({
 
       // Draw Runner Character (Vector Mascot)
       const rX = engine.runnerX;
-      const rY = engine.runnerY;
+      let rY = engine.runnerY;
 
       // Shadow on ground
       const shadowW = Math.max(10, RUNNER_WIDTH - (GROUND_LEVEL - 10 - rY) * 0.3);
@@ -321,62 +413,92 @@ export default function EndlessRunnerGame({
       ctx.ellipse(rX + RUNNER_WIDTH / 2, GROUND_LEVEL + 2, shadowW / 2, 4, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Runner Body (Red Shirt)
-      ctx.fillStyle = "#dc2626";
-      ctx.beginPath();
-      ctx.roundRect(rX + 4, rY + 12, 18, 16, 4);
-      ctx.fill();
-
-      // Head & Red Headband
-      ctx.fillStyle = "#f87171"; // Head skin
-      ctx.beginPath();
-      ctx.arc(rX + 13, rY + 7, 8, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Headband
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(rX + 5, rY + 4, 16, 3);
-      ctx.fillStyle = "#dc2626";
-      ctx.fillRect(rX + 3, rY + 4, 4, 3); // Tail ribbon
-
-      // Eye
-      ctx.fillStyle = "#0f172a";
-      ctx.fillRect(rX + 16, rY + 6, 2, 3);
-
-      // Running Legs Animation
-      ctx.strokeStyle = "#dc2626";
-      ctx.lineWidth = 3.5;
-      ctx.lineCap = "round";
-
-      if (engine.isJumping) {
-        // Legs tucked for jump
+      if (engine.isDucking) {
+        // Ducking / Crouching Stance
+        ctx.fillStyle = "#dc2626"; // Red Shirt
         ctx.beginPath();
-        ctx.moveTo(rX + 8, rY + 28);
-        ctx.lineTo(rX + 2, rY + 36);
-        ctx.moveTo(rX + 18, rY + 28);
-        ctx.lineTo(rX + 24, rY + 34);
-        ctx.stroke();
+        ctx.roundRect(rX + 2, rY + 22, 28, 14, 4);
+        ctx.fill();
+
+        // Head lowered
+        ctx.fillStyle = "#f87171";
+        ctx.beginPath();
+        ctx.arc(rX + 26, rY + 22, 7, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Headband
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(rX + 22, rY + 18, 8, 3);
+
+        // Eye
+        ctx.fillStyle = "#0f172a";
+        ctx.fillRect(rX + 28, rY + 22, 2, 2);
       } else {
-        // Alternating running legs
-        const legPhase = Math.floor(engine.legFrame);
-        const l1X = legPhase % 2 === 0 ? rX + 2 : rX + 22;
-        const l2X = legPhase % 2 === 0 ? rX + 22 : rX + 2;
-
+        // Normal Running / Jumping Stance
+        // Body (Red Shirt)
+        ctx.fillStyle = "#dc2626";
         ctx.beginPath();
-        ctx.moveTo(rX + 8, rY + 28);
-        ctx.lineTo(l1X, rY + 39);
-        ctx.moveTo(rX + 18, rY + 28);
-        ctx.lineTo(l2X, rY + 39);
-        ctx.stroke();
+        ctx.roundRect(rX + 4, rY + 12, 18, 16, 4);
+        ctx.fill();
+
+        // Head & Red Headband
+        ctx.fillStyle = "#f87171";
+        ctx.beginPath();
+        ctx.arc(rX + 13, rY + 7, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Headband
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(rX + 5, rY + 4, 16, 3);
+        ctx.fillStyle = "#dc2626";
+        ctx.fillRect(rX + 3, rY + 4, 4, 3);
+
+        // Eye
+        ctx.fillStyle = "#0f172a";
+        ctx.fillRect(rX + 16, rY + 6, 2, 3);
+
+        // Running Legs Animation
+        ctx.strokeStyle = "#dc2626";
+        ctx.lineWidth = 3.5;
+        ctx.lineCap = "round";
+
+        if (engine.isJumping) {
+          // Legs tucked for jump
+          ctx.beginPath();
+          ctx.moveTo(rX + 8, rY + 28);
+          ctx.lineTo(rX + 2, rY + 36);
+          ctx.moveTo(rX + 18, rY + 28);
+          ctx.lineTo(rX + 24, rY + 34);
+          ctx.stroke();
+        } else {
+          // Alternating running legs
+          const legPhase = Math.floor(engine.legFrame);
+          const l1X = legPhase % 2 === 0 ? rX + 2 : rX + 22;
+          const l2X = legPhase % 2 === 0 ? rX + 22 : rX + 2;
+
+          ctx.beginPath();
+          ctx.moveTo(rX + 8, rY + 28);
+          ctx.lineTo(l1X, rY + 39);
+          ctx.moveTo(rX + 18, rY + 28);
+          ctx.lineTo(l2X, rY + 39);
+          ctx.stroke();
+        }
       }
 
-      // HUD overlay on Canvas (Distance Counter)
+      // HUD Overlay on Canvas
       ctx.fillStyle = "#0f172a";
       ctx.font = "900 14px monospace";
       ctx.textAlign = "right";
       ctx.fillText(`${currentDist} M`, CANVAS_WIDTH - 15, 25);
       ctx.fillStyle = "#dc2626";
       ctx.fillText(`+${currentDist * 10} PTS`, CANVAS_WIDTH - 15, 42);
+
+      // Dynamic Speed Multiplier Badge
+      const speedMult = (engine.speed / 6.0).toFixed(1);
+      ctx.fillStyle = engine.speed > 11 ? "#dc2626" : engine.speed > 8.5 ? "#d97706" : "#475569";
+      ctx.font = "700 11px monospace";
+      ctx.textAlign = "left";
+      ctx.fillText(`KECEPATAN: ${speedMult}x`, 15, 25);
 
       // Request next frame
       animId = requestAnimationFrame(gameLoop);
@@ -409,16 +531,16 @@ export default function EndlessRunnerGame({
             <Zap className="w-8 h-8" />
           </div>
           <h3 className="text-base font-extrabold text-slate-900 uppercase mb-2">
-            2D ENDLESS RUNNER (LARI TANPA BATAS)
+            2D ENDLESS RUNNER (TANTANGAN LARI)
           </h3>
           <p className="text-xs text-slate-600 leading-relaxed mb-4 max-w-xs font-medium">
-            Berlari sejauh mungkin dan lewati setiap rintangan! <br />
-            Semakin jauh jarak berlari, semakin tinggi poin kelompok Anda (<span className="font-bold text-red-600">1 Meter = 10 PTS</span>).
+            Berlari sejauh mungkin dan lewati setiap rintangan! Kecepatan & kompleksitas rintangan akan <span className="font-bold text-red-600">semakin meningkat seiring waktu</span>.
           </p>
 
-          <div className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mb-6 text-xs text-slate-600 font-semibold space-y-1">
-            <p>⌨️ <strong>Keyboard:</strong> Tekan <span className="font-mono bg-white px-1.5 py-0.5 rounded border">SPACE</span> atau <span className="font-mono bg-white px-1.5 py-0.5 rounded border">▲</span> untuk melompat.</p>
-            <p>📱 <strong>Layar Sentuh:</strong> Tap layar canvas atau tombol lompat.</p>
+          <div className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mb-6 text-xs text-slate-600 font-semibold space-y-1 text-left">
+            <p>⌨️ <strong>Lompat:</strong> <span className="font-mono bg-white px-1.5 py-0.5 rounded border">SPACE</span> / <span className="font-mono bg-white px-1.5 py-0.5 rounded border">▲</span> / <span className="font-mono bg-white px-1.5 py-0.5 rounded border">W</span></p>
+            <p>⌨️ <strong>Runduk:</strong> Tahan <span className="font-mono bg-white px-1.5 py-0.5 rounded border">▼</span> / <span className="font-mono bg-white px-1.5 py-0.5 rounded border">S</span> (untuk burung tinggi)</p>
+            <p>📱 <strong>Layar Sentuh:</strong> Gunakan tombol Lompat & Runduk di layar.</p>
           </div>
 
           <button
@@ -446,16 +568,36 @@ export default function EndlessRunnerGame({
             />
           </div>
 
-          {/* Touch Controls for Mobile */}
+          {/* Dual Touch Controls for Mobile (Jump & Duck) */}
           {gameState === "PLAYING" && (
-            <button
-              type="button"
-              onClick={jump}
-              className="touch-btn w-full py-4 font-black uppercase tracking-widest text-sm bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-xl shadow-lg shadow-red-600/20 flex items-center justify-center gap-2 select-none touch-manipulation mb-2"
-            >
-              <ArrowUp className="w-6 h-6 stroke-[3]" />
-              <span>MELOMPAT (JUMP)</span>
-            </button>
+            <div className="w-full grid grid-cols-2 gap-3 mb-2">
+              <button
+                type="button"
+                onMouseDown={() => setDucking(true)}
+                onMouseUp={() => setDucking(false)}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  setDucking(true);
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  setDucking(false);
+                }}
+                className="touch-btn py-3.5 font-black uppercase tracking-wider text-xs bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white rounded-xl shadow-md flex items-center justify-center gap-1.5 select-none touch-manipulation"
+              >
+                <ArrowDown className="w-5 h-5 stroke-[3]" />
+                <span>RUNDUK (DUCK)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={jump}
+                className="touch-btn py-3.5 font-black uppercase tracking-wider text-xs bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-xl shadow-md shadow-red-600/20 flex items-center justify-center gap-1.5 select-none touch-manipulation"
+              >
+                <ArrowUp className="w-5 h-5 stroke-[3]" />
+                <span>LOMPAT (JUMP)</span>
+              </button>
+            </div>
           )}
         </div>
       )}
