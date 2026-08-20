@@ -66,8 +66,8 @@ export default function SnakeGame({
     setGameState("PLAYING");
   };
 
-  // Respawn snake for Next Life
-  const handleRespawn = () => {
+  // Respawn snake for Next Life (Resets current score to 0 for the new attempt)
+  const handleUseNextLife = () => {
     const respawnSnake = [
       { x: 6, y: 7 },
       { x: 6, y: 8 },
@@ -75,6 +75,8 @@ export default function SnakeGame({
     setSnake(respawnSnake);
     setDirection("UP");
     setFood(spawnFood(respawnSnake));
+    setFoodsEaten(0); // Reset score to 0
+    setSpeedMs(200);  // Reset speed
     setGameState("PLAYING");
   };
 
@@ -200,7 +202,7 @@ export default function SnakeGame({
             TANTANGAN ULAR (SNAKE GAME)
           </h3>
           <p className="text-xs text-slate-600 leading-relaxed mb-4 max-w-xs font-medium">
-            Kumpulkan poin makanan sebanyak-banyaknya dalam batas waktu <span className="font-bold text-red-600">5 Menit</span>! Anda memiliki <span className="font-bold text-red-600">3 Nyawa</span>.
+            Kumpulkan poin makanan sebanyak-banyaknya dalam batas waktu <span className="font-bold text-red-600">5 Menit</span>! Anda memiliki <span className="font-bold text-red-600">3 Nyawa</span>. Jika lanjut ke nyawa berikutnya saat mati, skor di nyawa sebelumnya akan di-reset.
           </p>
 
           <button
@@ -214,26 +216,42 @@ export default function SnakeGame({
       )}
 
       {gameState === "LIFE_LOST" && (
-        <div className="text-center py-6 w-full flex flex-col items-center">
-          <div className="w-14 h-14 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center mb-3">
-            <Heart className="w-7 h-7 text-red-600 fill-red-600" />
+        <div className="text-center py-4 w-full flex flex-col items-center">
+          <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center mb-3 text-amber-600 shadow-sm">
+            <Heart className="w-7 h-7 fill-amber-500 text-amber-500" />
           </div>
-          <h3 className="text-base font-extrabold text-slate-900 uppercase mb-1">
-            {lives === 2 ? "NYAWA PERTAMA HABIS!" : "NYAWA KE-2 HABIS!"}
-          </h3>
-          <p className="text-xs text-slate-600 mb-4">
-            Skor Terkumpul: <span className="font-bold text-red-600">+{totalScore} PTS</span> ({foodsEaten} Makanan)
-            <br />
-            Sisa Kesempatan: <span className="font-bold text-slate-900">{lives} Nyawa</span>
-          </p>
 
-          <button
-            type="button"
-            onClick={handleRespawn}
-            className="touch-btn w-full font-extrabold uppercase tracking-wider text-xs bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-lg transition-all"
-          >
-            {lives === 2 ? "GUNAKAN NYAWA KE-2 (LANJUTKAN)" : "GUNAKAN NYAWA KE-3 (LANJUTKAN)"}
-          </button>
+          <h3 className="text-base font-extrabold text-slate-900 uppercase mb-1">
+            {lives === 2 ? "NYAWA KE-1 HABIS!" : "NYAWA KE-2 HABIS!"}
+          </h3>
+
+          <div className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 my-3 text-center">
+            <p className="text-xs text-slate-500 font-semibold mb-0.5">Skor Percobaan Ini:</p>
+            <p className="text-xl font-black text-red-600">+{totalScore} PTS</p>
+            <p className="text-[11px] text-slate-400 font-medium">({foodsEaten} Makanan Dikumpulkan)</p>
+          </div>
+
+          <div className="w-full bg-amber-50/80 border border-amber-200 rounded-xl p-2.5 mb-4 text-[11px] text-amber-800 text-left font-medium leading-tight">
+            ⚠️ <strong>Perhatian:</strong> Jika memilih <strong>Lanjut Nyawa</strong>, skor <strong>+{totalScore} PTS</strong> ini akan <strong>hangus (di-reset ke 0)</strong> untuk mulai lagi dari awal.
+          </div>
+
+          <div className="w-full space-y-2">
+            <button
+              type="button"
+              onClick={() => setGameState("FINISHED")}
+              className="touch-btn w-full font-extrabold uppercase tracking-wider text-xs bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl py-3 shadow-lg shadow-emerald-600/20 transition-all flex items-center justify-center gap-1.5"
+            >
+              <span>SUBMIT SKOR SEKARANG (+{totalScore} PTS)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleUseNextLife}
+              className="touch-btn w-full font-extrabold uppercase tracking-wider text-xs bg-slate-100 hover:bg-slate-200 active:bg-slate-300 border border-slate-300 text-slate-800 rounded-xl py-2.5 transition-all flex items-center justify-center gap-1.5"
+            >
+              <span>LANJUT NYAWA KE-{4 - lives} (RESET SKOR KE 0)</span>
+            </button>
+          </div>
         </div>
       )}
 
