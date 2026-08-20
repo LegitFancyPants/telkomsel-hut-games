@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { PostData } from "@/lib/store";
-import { Plus, Edit2, Trash2, Key, ToggleLeft, ToggleRight, ArrowLeft, Shield, CheckCircle2 } from "lucide-react";
+import { Plus, Edit2, Trash2, Key, ToggleLeft, ToggleRight, ArrowLeft, User, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 
 export default function AdminPostsPage() {

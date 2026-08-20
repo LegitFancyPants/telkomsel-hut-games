@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { PostData, GroupData } from "@/lib/store";
-import { Shield, QrCode, Lock, Users, FileText, ChevronRight } from "lucide-react";
+import { User, QrCode, Lock, Users, FileText, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 export default function AdminDashboardPage() {
@@ -42,7 +42,7 @@ export default function AdminDashboardPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-slate-200">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Shield className="w-4 h-4 text-red-600" />
+              <User className="w-4 h-4 text-red-600" />
               <span className="text-xs font-extrabold uppercase tracking-wider text-red-600">
                 ADMIN PANEL
               </span>

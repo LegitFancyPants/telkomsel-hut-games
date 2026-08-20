@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
-import { Shield, Lock, ArrowRight } from "lucide-react";
+import { User, Lock, ArrowRight } from "lucide-react";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -48,7 +48,7 @@ export default function AdminLoginPage() {
       <main className="flex-1 max-w-sm w-full mx-auto px-4 py-12 flex flex-col justify-center">
         <div className="p-6 sm:p-8 bg-white border border-slate-200 rounded-2xl shadow-xl shadow-red-950/5">
           <div className="w-12 h-12 rounded-xl bg-red-50 border border-red-200 flex items-center justify-center text-red-600 mx-auto mb-4 shadow-sm">
-            <Shield className="w-6 h-6" />
+            <User className="w-6 h-6" />
           </div>
 
           <h1 className="text-lg font-black text-center text-slate-900 uppercase tracking-wide mb-1">

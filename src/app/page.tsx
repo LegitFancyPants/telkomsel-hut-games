@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
-import { QrCode, Trophy, Shield, ChevronRight } from "lucide-react";
+import { QrCode, Trophy, User, ChevronRight } from "lucide-react";
 
 export const revalidate = 0;
 
@@ -10,12 +10,6 @@ export default async function HomePage() {
       <Navbar />
 
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-8 sm:py-16 flex flex-col items-center justify-center text-center">
-        {/* Banner Section */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-50 border border-red-200 text-red-700 text-xs font-bold uppercase tracking-wider mb-6">
-          <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
-          RALLY GAME QR-GATED SYSTEM
-        </div>
-
         <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 mb-4 max-w-2xl leading-tight">
           SCAN QR CODE DI BANNER POS UNTUK MEMULAI GAME
         </h1>
@@ -60,7 +54,7 @@ export default async function HomePage() {
             className="p-4 rounded-xl bg-white border border-slate-200 hover:border-slate-400 transition-all flex items-center justify-between group shadow-sm hover:shadow-md"
           >
             <div className="flex items-center gap-3">
-              <Shield className="w-5 h-5 text-slate-600" />
+              <User className="w-5 h-5 text-slate-600" />
               <span className="text-xs font-bold text-slate-800 group-hover:text-slate-900">
                 PORTAL ADMIN POS
               </span>
