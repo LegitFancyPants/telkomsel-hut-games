@@ -31,7 +31,7 @@ export default function SnakeGame({
   const [direction, setDirection] = useState<Direction>("UP");
   const [food, setFood] = useState<Position>({ x: 6, y: 3 });
   const [foodsEaten, setFoodsEaten] = useState(0);
-  const [lives, setLives] = useState(2); // 2 Kesempatan / Nyawa
+  const [lives, setLives] = useState(3); // 3 Kesempatan / Nyawa
   const [gameState, setGameState] = useState<"IDLE" | "PLAYING" | "LIFE_LOST" | "FINISHED">("IDLE");
   const [timeLeft, setTimeLeft] = useState<number>(timeLimit || 300); // Default 5 Menit (300 Detik)
   const [speedMs, setSpeedMs] = useState(200); // Kecepatan awal lebih santai (200ms)
@@ -60,14 +60,14 @@ export default function SnakeGame({
     setDirection("UP");
     setFood(spawnFood(initialSnake));
     setFoodsEaten(0);
-    setLives(2);
+    setLives(3);
     setSpeedMs(200);
     setTimeLeft(timeLimit || 300);
     setGameState("PLAYING");
   };
 
-  // Respawn snake for Life 2
-  const handleUseSecondLife = () => {
+  // Respawn snake for Next Life
+  const handleRespawn = () => {
     const respawnSnake = [
       { x: 6, y: 7 },
       { x: 6, y: 8 },
@@ -200,7 +200,7 @@ export default function SnakeGame({
             TANTANGAN ULAR (SNAKE GAME)
           </h3>
           <p className="text-xs text-slate-600 leading-relaxed mb-4 max-w-xs font-medium">
-            Kumpulkan poin makanan sebanyak-banyaknya dalam batas waktu <span className="font-bold text-red-600">5 Menit</span>! Anda memiliki <span className="font-bold text-red-600">2 Nyawa</span>.
+            Kumpulkan poin makanan sebanyak-banyaknya dalam batas waktu <span className="font-bold text-red-600">5 Menit</span>! Anda memiliki <span className="font-bold text-red-600">3 Nyawa</span>.
           </p>
 
           <button
@@ -219,18 +219,20 @@ export default function SnakeGame({
             <Heart className="w-7 h-7 text-red-600 fill-red-600" />
           </div>
           <h3 className="text-base font-extrabold text-slate-900 uppercase mb-1">
-            NYAWA PERTAMA HABIS!
+            {lives === 2 ? "NYAWA PERTAMA HABIS!" : "NYAWA KE-2 HABIS!"}
           </h3>
           <p className="text-xs text-slate-600 mb-4">
             Skor Terkumpul: <span className="font-bold text-red-600">+{totalScore} PTS</span> ({foodsEaten} Makanan)
+            <br />
+            Sisa Kesempatan: <span className="font-bold text-slate-900">{lives} Nyawa</span>
           </p>
 
           <button
             type="button"
-            onClick={handleUseSecondLife}
+            onClick={handleRespawn}
             className="touch-btn w-full font-extrabold uppercase tracking-wider text-xs bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-lg transition-all"
           >
-            GUNAKAN NYAWA KE-2 (LANJUTKAN)
+            {lives === 2 ? "GUNAKAN NYAWA KE-2 (LANJUTKAN)" : "GUNAKAN NYAWA KE-3 (LANJUTKAN)"}
           </button>
         </div>
       )}
@@ -246,7 +248,7 @@ export default function SnakeGame({
 
             {/* Lives Indicator */}
             <div className="flex items-center gap-1">
-              {[1, 2].map((l) => (
+              {[1, 2, 3].map((l) => (
                 <Heart
                   key={l}
                   className={`w-4 h-4 ${
