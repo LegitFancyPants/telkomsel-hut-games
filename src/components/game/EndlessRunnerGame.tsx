@@ -157,7 +157,7 @@ export default function EndlessRunnerGame({
       engine.distance += engine.speed * 0.15;
       const currentDist = Math.floor(engine.distance);
 
-      // Speed increases progressively over time/distance up to 14.5x
+      // Speed increases progressively over distance (up to 14.5x)
       engine.speed = 6.0 + Math.min(8.5, Math.floor(currentDist / 60) * 0.55);
 
       // Runner Jump & Gravity
@@ -178,106 +178,174 @@ export default function EndlessRunnerGame({
         if (cloud.x < -80) cloud.x = CANVAS_WIDTH + 40;
       });
 
-      // Spawn Varied Obstacle Patterns based on Distance Phase
+      // Spawn Structured Combination Patterns & Clusters
       engine.nextObstacleTimer -= 1;
       if (engine.nextObstacleTimer <= 0) {
         const rand = Math.random();
-        let obsType: Obstacle["type"] = "GROUND_SMALL";
-        let obsW = 22;
-        let obsH = 36;
-        let obsY = GROUND_LEVEL - obsH;
+        const spawnX = CANVAS_WIDTH + 20;
 
-        if (currentDist < 80) {
-          // Phase 1 (0-80m): Single Small & Tall Cacti
-          if (rand > 0.6) {
-            obsType = "GROUND_TALL";
-            obsW = 24;
-            obsH = 46;
-            obsY = GROUND_LEVEL - obsH;
-          }
-        } else if (currentDist < 200) {
-          // Phase 2 (80-200m): Add Double Cacti & Low Flying Drones (Jump over)
+        if (currentDist < 70) {
+          // Phase 1 (0-70m): Single Small & Tall Cacti
+          const isTall = rand > 0.6;
+          const obsW = isTall ? 24 : 22;
+          const obsH = isTall ? 46 : 36;
+          engine.obstacles.push({
+            x: spawnX,
+            y: GROUND_LEVEL - obsH,
+            width: obsW,
+            height: obsH,
+            type: isTall ? "GROUND_TALL" : "GROUND_SMALL",
+          });
+          engine.nextObstacleTimer = Math.max(35, 110 - Math.floor(engine.speed * 5)) + Math.floor(Math.random() * 30);
+        } else if (currentDist < 180) {
+          // Phase 2 (70-180m): Introduces Double Hop Combos & Low Drones
           if (rand > 0.7) {
-            obsType = "GROUND_DOUBLE";
-            obsW = 44;
-            obsH = 36;
-            obsY = GROUND_LEVEL - obsH;
-          } else if (rand > 0.45) {
-            obsType = "FLYING_LOW";
-            obsW = 32;
-            obsH = 20;
-            obsY = GROUND_LEVEL - 34; // Must jump over
-          } else if (rand > 0.25) {
-            obsType = "GROUND_TALL";
-            obsW = 24;
-            obsH = 46;
-            obsY = GROUND_LEVEL - obsH;
-          }
-        } else if (currentDist < 450) {
-          // Phase 3 (200-450m): Add High Flying Drones (Must DUCK under!)
-          if (rand > 0.75) {
-            obsType = "FLYING_HIGH";
-            obsW = 34;
-            obsH = 22;
-            obsY = GROUND_LEVEL - 58; // High altitude -> Must DUCK under!
-          } else if (rand > 0.5) {
-            obsType = "GROUND_DOUBLE";
-            obsW = 44;
-            obsH = 36;
-            obsY = GROUND_LEVEL - obsH;
-          } else if (rand > 0.25) {
-            obsType = "FLYING_LOW";
-            obsW = 32;
-            obsH = 20;
-            obsY = GROUND_LEVEL - 34;
+            // Pattern: Double Hop Combo (2 small cacti spaced for rhythm jump)
+            const gap = Math.floor(engine.speed * 26);
+            engine.obstacles.push({
+              x: spawnX,
+              y: GROUND_LEVEL - 36,
+              width: 22,
+              height: 36,
+              type: "GROUND_SMALL",
+            });
+            engine.obstacles.push({
+              x: spawnX + gap,
+              y: GROUND_LEVEL - 36,
+              width: 22,
+              height: 36,
+              type: "GROUND_SMALL",
+            });
+            engine.nextObstacleTimer = Math.max(40, 130 - Math.floor(engine.speed * 5)) + Math.floor(Math.random() * 25);
+          } else if (rand > 0.4) {
+            // Single Low Drone or Double Cactus
+            const isLowDrone = rand > 0.55;
+            engine.obstacles.push({
+              x: spawnX,
+              y: isLowDrone ? GROUND_LEVEL - 34 : GROUND_LEVEL - 36,
+              width: isLowDrone ? 32 : 44,
+              height: isLowDrone ? 20 : 36,
+              type: isLowDrone ? "FLYING_LOW" : "GROUND_DOUBLE",
+            });
+            engine.nextObstacleTimer = Math.max(35, 105 - Math.floor(engine.speed * 5)) + Math.floor(Math.random() * 30);
           } else {
-            obsType = "GROUND_TALL";
-            obsW = 24;
-            obsH = 48;
-            obsY = GROUND_LEVEL - obsH;
+            engine.obstacles.push({
+              x: spawnX,
+              y: GROUND_LEVEL - 46,
+              width: 24,
+              height: 46,
+              type: "GROUND_TALL",
+            });
+            engine.nextObstacleTimer = Math.max(35, 100 - Math.floor(engine.speed * 5)) + Math.floor(Math.random() * 30);
+          }
+        } else if (currentDist < 380) {
+          // Phase 3 (180-380m): Combos Jump-then-Duck & Duck-then-Jump
+          if (rand > 0.7) {
+            // Combo Pattern: Jump over Cactus THEN Duck under High Drone
+            const gap = Math.floor(engine.speed * 28);
+            engine.obstacles.push({
+              x: spawnX,
+              y: GROUND_LEVEL - 36,
+              width: 22,
+              height: 36,
+              type: "GROUND_SMALL",
+            });
+            engine.obstacles.push({
+              x: spawnX + gap,
+              y: GROUND_LEVEL - 58,
+              width: 34,
+              height: 22,
+              type: "FLYING_HIGH",
+            });
+            engine.nextObstacleTimer = Math.max(45, 140 - Math.floor(engine.speed * 5)) + Math.floor(Math.random() * 25);
+          } else if (rand > 0.4) {
+            // Combo Pattern: Duck under High Drone THEN Jump over Low Drone
+            const gap = Math.floor(engine.speed * 26);
+            engine.obstacles.push({
+              x: spawnX,
+              y: GROUND_LEVEL - 58,
+              width: 34,
+              height: 22,
+              type: "FLYING_HIGH",
+            });
+            engine.obstacles.push({
+              x: spawnX + gap,
+              y: GROUND_LEVEL - 34,
+              width: 32,
+              height: 20,
+              type: "FLYING_LOW",
+            });
+            engine.nextObstacleTimer = Math.max(45, 135 - Math.floor(engine.speed * 5)) + Math.floor(Math.random() * 25);
+          } else {
+            engine.obstacles.push({
+              x: spawnX,
+              y: GROUND_LEVEL - 36,
+              width: 44,
+              height: 36,
+              type: "GROUND_DOUBLE",
+            });
+            engine.nextObstacleTimer = Math.max(35, 95 - Math.floor(engine.speed * 5)) + Math.floor(Math.random() * 25);
           }
         } else {
-          // Phase 4 (450m+): Triple Cacti, Rapid Flying Drones, Chaotic Mix
-          if (rand > 0.8) {
-            obsType = "GROUND_TRIPLE";
-            obsW = 62;
-            obsH = 36;
-            obsY = GROUND_LEVEL - obsH;
-          } else if (rand > 0.6) {
-            obsType = "FLYING_HIGH";
-            obsW = 36;
-            obsH = 22;
-            obsY = GROUND_LEVEL - 58;
-          } else if (rand > 0.35) {
-            obsType = "FLYING_LOW";
-            obsW = 32;
-            obsH = 20;
-            obsY = GROUND_LEVEL - 34;
-          } else if (rand > 0.15) {
-            obsType = "GROUND_DOUBLE";
-            obsW = 44;
-            obsH = 38;
-            obsY = GROUND_LEVEL - obsH;
+          // Phase 4 (380m+ Extreme): Advanced Passable Combo Mixes
+          if (rand > 0.75) {
+            // Combo Pattern: Dual High Drones (Sustained Ducking)
+            const gap = Math.floor(engine.speed * 14);
+            engine.obstacles.push({
+              x: spawnX,
+              y: GROUND_LEVEL - 58,
+              width: 34,
+              height: 22,
+              type: "FLYING_HIGH",
+            });
+            engine.obstacles.push({
+              x: spawnX + gap,
+              y: GROUND_LEVEL - 58,
+              width: 34,
+              height: 22,
+              type: "FLYING_HIGH",
+            });
+            engine.nextObstacleTimer = Math.max(45, 125 - Math.floor(engine.speed * 5)) + Math.floor(Math.random() * 20);
+          } else if (rand > 0.5) {
+            // Combo Pattern: Jump Ground Double THEN Duck High Drone
+            const gap = Math.floor(engine.speed * 30);
+            engine.obstacles.push({
+              x: spawnX,
+              y: GROUND_LEVEL - 36,
+              width: 44,
+              height: 36,
+              type: "GROUND_DOUBLE",
+            });
+            engine.obstacles.push({
+              x: spawnX + gap,
+              y: GROUND_LEVEL - 58,
+              width: 34,
+              height: 22,
+              type: "FLYING_HIGH",
+            });
+            engine.nextObstacleTimer = Math.max(45, 145 - Math.floor(engine.speed * 5)) + Math.floor(Math.random() * 20);
+          } else if (rand > 0.25) {
+            // Triple Cactus Sprint
+            engine.obstacles.push({
+              x: spawnX,
+              y: GROUND_LEVEL - 36,
+              width: 62,
+              height: 36,
+              type: "GROUND_TRIPLE",
+            });
+            engine.nextObstacleTimer = Math.max(35, 90 - Math.floor(engine.speed * 5)) + Math.floor(Math.random() * 20);
           } else {
-            obsType = "GROUND_TALL";
-            obsW = 26;
-            obsH = 50;
-            obsY = GROUND_LEVEL - obsH;
+            // Fast Single Flying Low Drone
+            engine.obstacles.push({
+              x: spawnX,
+              y: GROUND_LEVEL - 34,
+              width: 34,
+              height: 20,
+              type: "FLYING_LOW",
+            });
+            engine.nextObstacleTimer = Math.max(30, 85 - Math.floor(engine.speed * 5)) + Math.floor(Math.random() * 20);
           }
         }
-
-        engine.obstacles.push({
-          x: CANVAS_WIDTH + 20,
-          y: obsY,
-          width: obsW,
-          height: obsH,
-          type: obsType,
-        });
-
-        // Min gap between obstacles shrinks progressively as speed/distance increases
-        const baseGap = Math.max(30, 115 - Math.floor(engine.speed * 5.5));
-        const randomVar = Math.floor(Math.random() * (40 - Math.min(25, Math.floor(currentDist / 40))));
-        engine.nextObstacleTimer = baseGap + Math.max(10, randomVar);
       }
 
       // Move & Filter Obstacles
@@ -534,12 +602,12 @@ export default function EndlessRunnerGame({
             2D ENDLESS RUNNER (TANTANGAN LARI)
           </h3>
           <p className="text-xs text-slate-600 leading-relaxed mb-4 max-w-xs font-medium">
-            Berlari sejauh mungkin dan lewati setiap rintangan! Kecepatan & kompleksitas rintangan akan <span className="font-bold text-red-600">semakin meningkat seiring waktu</span>.
+            Berlari sejauh mungkin dan lewati setiap rintangan & kombinasi drone! Kecepatan & pola combo rintangan akan <span className="font-bold text-red-600">semakin beragam & menantang</span>.
           </p>
 
           <div className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mb-6 text-xs text-slate-600 font-semibold space-y-1 text-left">
             <p>⌨️ <strong>Lompat:</strong> <span className="font-mono bg-white px-1.5 py-0.5 rounded border">SPACE</span> / <span className="font-mono bg-white px-1.5 py-0.5 rounded border">▲</span> / <span className="font-mono bg-white px-1.5 py-0.5 rounded border">W</span></p>
-            <p>⌨️ <strong>Runduk:</strong> Tahan <span className="font-mono bg-white px-1.5 py-0.5 rounded border">▼</span> / <span className="font-mono bg-white px-1.5 py-0.5 rounded border">S</span> (untuk burung tinggi)</p>
+            <p>⌨️ <strong>Runduk:</strong> Tahan <span className="font-mono bg-white px-1.5 py-0.5 rounded border">▼</span> / <span className="font-mono bg-white px-1.5 py-0.5 rounded border">S</span> (untuk burung/drone tinggi)</p>
             <p>📱 <strong>Layar Sentuh:</strong> Gunakan tombol Lompat & Runduk di layar.</p>
           </div>
 
