@@ -34,8 +34,9 @@ export default function QuizEngine({
   const [userAnswers, setUserAnswers] = useState<{ [questionId: number]: string }>({});
   const [timeLeft, setTimeLeft] = useState(timeLimit || 60);
 
-  // Audio Player State
+  // Audio Player State (Enforced 10-second snippet limit)
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [audioProgressSec, setAudioProgressSec] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const currentQ = questions[currentIndex];
@@ -44,6 +45,7 @@ export default function QuizEngine({
   // Reset audio state when switching questions
   useEffect(() => {
     setIsPlayingAudio(false);
+    setAudioProgressSec(0);
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
@@ -70,10 +72,27 @@ export default function QuizEngine({
       audioRef.current.pause();
       setIsPlayingAudio(false);
     } else {
+      if (audioRef.current.currentTime >= 10) {
+        audioRef.current.currentTime = 0;
+      }
       audioRef.current
         .play()
         .then(() => setIsPlayingAudio(true))
         .catch((e) => console.error("Audio playback error:", e));
+    }
+  };
+
+  // Enforce strict 10-second max limit
+  const handleAudioTimeUpdate = (e: React.SyntheticEvent<HTMLAudioElement>) => {
+    const audio = e.currentTarget;
+    const currentSec = Math.min(10, Math.floor(audio.currentTime));
+    setAudioProgressSec(currentSec);
+
+    if (audio.currentTime >= 10) {
+      audio.pause();
+      audio.currentTime = 0;
+      setIsPlayingAudio(false);
+      setAudioProgressSec(0);
     }
   };
 
@@ -149,20 +168,38 @@ export default function QuizEngine({
           </div>
         )}
 
-        {/* Optional Audio Player for Tebak Lagu */}
+        {/* Optional 10-Second Trimming Audio Player for Tebak Lagu */}
         {currentQ.audioUrl && (
-          <div className="w-full p-3 mb-3 bg-slate-900 border border-sky-800/80 rounded-xl flex flex-col items-center gap-2">
+          <div className="w-full p-3.5 mb-3 bg-slate-900 border border-emerald-800/80 rounded-xl flex flex-col items-center gap-2.5">
             <audio
               ref={audioRef}
               src={currentQ.audioUrl}
-              onEnded={() => setIsPlayingAudio(false)}
+              onTimeUpdate={handleAudioTimeUpdate}
+              onEnded={() => {
+                setIsPlayingAudio(false);
+                setAudioProgressSec(0);
+              }}
               onPause={() => setIsPlayingAudio(false)}
               onPlay={() => setIsPlayingAudio(true)}
               preload="metadata"
             />
-            <div className="flex items-center gap-2 text-sky-400">
-              <Music className="w-4 h-4 animate-bounce" />
-              <span className="text-xs font-bold uppercase tracking-wider">AUDIO KLIP LAGU</span>
+
+            <div className="w-full flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-emerald-400">
+                <Music className="w-4 h-4 animate-bounce" />
+                <span className="text-[11px] font-extrabold uppercase tracking-wider">TEBAK LAGU (10 DETIK)</span>
+              </div>
+              <span className="text-xs font-mono font-bold text-amber-400">
+                00:0{audioProgressSec} / 00:10
+              </span>
+            </div>
+
+            {/* 10-Second Progress Bar */}
+            <div className="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+              <div
+                className="h-full bg-emerald-500 transition-all duration-300"
+                style={{ width: `${(audioProgressSec / 10) * 100}%` }}
+              />
             </div>
 
             <button
@@ -171,18 +208,18 @@ export default function QuizEngine({
               className={`touch-btn w-full py-2.5 px-4 rounded-lg font-extrabold text-xs flex items-center justify-center gap-2 transition-all border ${
                 isPlayingAudio
                   ? "bg-amber-950/80 border-amber-500 text-amber-300 shadow-md"
-                  : "bg-sky-600 hover:bg-sky-500 border-sky-500 text-white shadow-lg"
+                  : "bg-emerald-600 hover:bg-emerald-500 border-emerald-500 text-white shadow-lg"
               }`}
             >
               {isPlayingAudio ? (
                 <>
                   <Pause className="w-4 h-4 fill-current" />
-                  <span>JEDA AUDIO</span>
+                  <span>JEDA AUDIO (KLIP 10s)</span>
                 </>
               ) : (
                 <>
                   <Play className="w-4 h-4 fill-current" />
-                  <span>PUTAR KLIP AUDIO</span>
+                  <span>PUTAR KLIP (MAX 10 DETIK)</span>
                 </>
               )}
             </button>

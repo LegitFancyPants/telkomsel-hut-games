@@ -147,12 +147,20 @@ export default function AdminGamesPage() {
       }
 
       setAudioUrl(data.fileUrl);
-      setNotification("File audio potongan lagu berhasil diunggah");
+      setNotification("File audio potongan lagu berhasil diunggah (terpotong otomatis max 10s)");
       setTimeout(() => setNotification(""), 3000);
     } catch (err) {
       alert("Terjadi kesalahan koneksi saat mengunggah file audio");
     } finally {
       setIsUploadingAudio(false);
+    }
+  };
+
+  const handleAudioTimeUpdate = (e: React.SyntheticEvent<HTMLAudioElement>) => {
+    const audio = e.currentTarget;
+    if (audio.currentTime >= 10) {
+      audio.pause();
+      audio.currentTime = 0;
     }
   };
 
@@ -260,7 +268,7 @@ export default function AdminGamesPage() {
               PENGATURAN KONTEN & BANK SOAL GAME
             </h1>
             <p className="text-xs text-slate-400">
-              Kelola soal kuis, upload gambar Tebak Gambar, upload file audio Tebak Lagu, atau hapus semua soal
+              Kelola soal kuis, upload gambar Tebak Gambar, upload file audio Tebak Lagu (auto 10 detik), atau hapus semua soal
             </p>
           </div>
         </div>
@@ -385,11 +393,11 @@ export default function AdminGamesPage() {
                       )}
                     </div>
 
-                    {/* Audio Upload Field (Tebak Lagu) */}
+                    {/* Audio Upload Field (Tebak Lagu - Auto 10 Seconds) */}
                     <div>
                       <label className="block text-[11px] font-semibold uppercase text-slate-400 mb-1 flex items-center gap-1">
                         <Music className="w-3.5 h-3.5 text-emerald-400" />
-                        <span>Upload File Suara (Opsional - Tebak Lagu)</span>
+                        <span>Upload File Suara (Opsional - Auto Potong Max 10 Detik)</span>
                       </label>
 
                       {audioUrl ? (
@@ -397,7 +405,7 @@ export default function AdminGamesPage() {
                           <div className="flex items-center justify-between">
                             <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
                               <Volume2 className="w-3.5 h-3.5" />
-                              <span>Audio Klip Terpasang</span>
+                              <span>Klip Audio Terpasang (Max 10s)</span>
                             </span>
                             <button
                               type="button"
@@ -408,7 +416,15 @@ export default function AdminGamesPage() {
                               <span>Hapus Audio</span>
                             </button>
                           </div>
-                          <audio src={audioUrl} controls className="w-full h-8 rounded" />
+                          <audio
+                            src={audioUrl}
+                            onTimeUpdate={handleAudioTimeUpdate}
+                            controls
+                            className="w-full h-8 rounded"
+                          />
+                          <p className="text-[10px] text-slate-500 italic">
+                            *Audio otomatis berhenti pada detik ke-10 saat diputar oleh peserta.
+                          </p>
                         </div>
                       ) : (
                         <div className="relative border-2 border-dashed border-slate-800 hover:border-emerald-500 rounded-xl p-3 text-center transition-colors bg-slate-950/60">
@@ -423,6 +439,7 @@ export default function AdminGamesPage() {
                           <p className="text-xs font-semibold text-slate-300">
                             {isUploadingAudio ? "Mengunggah audio..." : "Pilih File Audio (.mp3, .wav, .m4a)"}
                           </p>
+                          <p className="text-[10px] text-emerald-400 font-mono mt-0.5">Otomatis terpotong 10 detik pertama</p>
                         </div>
                       )}
                     </div>
@@ -553,7 +570,13 @@ export default function AdminGamesPage() {
                               {q.audioUrl && (
                                 <div className="p-2 rounded-lg border border-emerald-800 bg-emerald-950/40 flex items-center gap-2">
                                   <Music className="w-4 h-4 text-emerald-400 shrink-0" />
-                                  <audio src={q.audioUrl} controls className="h-7 w-48" />
+                                  <audio
+                                    src={q.audioUrl}
+                                    onTimeUpdate={handleAudioTimeUpdate}
+                                    controls
+                                    className="h-7 w-48"
+                                  />
+                                  <span className="text-[10px] font-bold text-emerald-400 font-mono">(Max 10s)</span>
                                 </div>
                               )}
                             </div>
