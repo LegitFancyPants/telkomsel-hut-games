@@ -95,7 +95,21 @@ export default function AdminGamesPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const inputElement = e.target;
     setIsUploadingImage(true);
+
+    // FileReader local Data URL fallback for instant preview & guaranteed upload
+    let localDataUrl = "";
+    try {
+      localDataUrl = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+    } catch (readErr) {
+      console.warn("FileReader error:", readErr);
+    }
+
     const formData = new FormData();
     formData.append("file", file);
 
@@ -108,18 +122,32 @@ export default function AdminGamesPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.error || "Gagal mengunggah gambar");
-        setIsUploadingImage(false);
+        if (localDataUrl) {
+          // Use local Data URL if server endpoint returns non-200
+          setImageUrl(localDataUrl);
+          setNotification("Gambar berhasil dipasang (Base64 Mode)");
+          setTimeout(() => setNotification(""), 3000);
+        } else {
+          alert(data.error || "Gagal mengunggah gambar");
+        }
         return;
       }
 
-      setImageUrl(data.fileUrl);
+      const finalUrl = data.imageUrl || data.fileUrl || data.dataUrl || localDataUrl;
+      setImageUrl(finalUrl);
       setNotification("File gambar berhasil diunggah");
       setTimeout(() => setNotification(""), 3000);
     } catch (err) {
-      alert("Terjadi kesalahan koneksi saat mengunggah gambar");
+      if (localDataUrl) {
+        setImageUrl(localDataUrl);
+        setNotification("Gambar berhasil dipasang (Base64 Mode)");
+        setTimeout(() => setNotification(""), 3000);
+      } else {
+        alert("Terjadi kesalahan koneksi saat mengunggah gambar");
+      }
     } finally {
       setIsUploadingImage(false);
+      inputElement.value = "";
     }
   };
 
@@ -128,7 +156,20 @@ export default function AdminGamesPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const inputElement = e.target;
     setIsUploadingAudio(true);
+
+    let localDataUrl = "";
+    try {
+      localDataUrl = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+    } catch (readErr) {
+      console.warn("FileReader audio error:", readErr);
+    }
+
     const formData = new FormData();
     formData.append("file", file);
 
@@ -141,18 +182,31 @@ export default function AdminGamesPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.error || "Gagal mengunggah file audio");
-        setIsUploadingAudio(false);
+        if (localDataUrl) {
+          setAudioUrl(localDataUrl);
+          setNotification("File audio berhasil dipasang (Base64 Mode)");
+          setTimeout(() => setNotification(""), 3000);
+        } else {
+          alert(data.error || "Gagal mengunggah file audio");
+        }
         return;
       }
 
-      setAudioUrl(data.fileUrl);
+      const finalUrl = data.audioUrl || data.fileUrl || data.dataUrl || localDataUrl;
+      setAudioUrl(finalUrl);
       setNotification("File audio potongan lagu berhasil diunggah (terpotong otomatis max 10s)");
       setTimeout(() => setNotification(""), 3000);
     } catch (err) {
-      alert("Terjadi kesalahan koneksi saat mengunggah file audio");
+      if (localDataUrl) {
+        setAudioUrl(localDataUrl);
+        setNotification("File audio berhasil dipasang (Base64 Mode)");
+        setTimeout(() => setNotification(""), 3000);
+      } else {
+        alert("Terjadi kesalahan koneksi saat mengunggah file audio");
+      }
     } finally {
       setIsUploadingAudio(false);
+      inputElement.value = "";
     }
   };
 

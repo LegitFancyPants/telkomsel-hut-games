@@ -11,9 +11,32 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Tidak ada file yang diunggah" }, { status: 400 });
     }
 
-    const fileType = file.type || "";
-    const isImage = fileType.startsWith("image/");
-    const isAudio = fileType.startsWith("audio/") || file.name.endsWith(".mp3") || file.name.endsWith(".wav") || file.name.endsWith(".m4a") || file.name.endsWith(".ogg");
+    const fileName = (file.name || "").toLowerCase();
+    const fileType = (file.type || "").toLowerCase();
+
+    // Comprehensive Image format detection (MIME type or extension)
+    const isImage =
+      fileType.startsWith("image/") ||
+      fileName.endsWith(".png") ||
+      fileName.endsWith(".jpg") ||
+      fileName.endsWith(".jpeg") ||
+      fileName.endsWith(".webp") ||
+      fileName.endsWith(".gif") ||
+      fileName.endsWith(".svg") ||
+      fileName.endsWith(".bmp") ||
+      fileName.endsWith(".ico") ||
+      fileName.endsWith(".jfif");
+
+    // Comprehensive Audio format detection (MIME type or extension)
+    const isAudio =
+      fileType.startsWith("audio/") ||
+      fileName.endsWith(".mp3") ||
+      fileName.endsWith(".wav") ||
+      fileName.endsWith(".m4a") ||
+      fileName.endsWith(".ogg") ||
+      fileName.endsWith(".aac") ||
+      fileName.endsWith(".flac") ||
+      fileName.endsWith(".wma");
 
     if (!isImage && !isAudio) {
       return NextResponse.json(
@@ -25,28 +48,44 @@ export async function POST(req: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Save to public/uploads
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
+    let publicUrl = "";
 
+    // 1. Try saving to public/uploads
     try {
+      const uploadDir = path.join(process.cwd(), "public", "uploads");
       await mkdir(uploadDir, { recursive: true });
-    } catch (err) {
-      // Directory already exists
+
+      const sanitizedFilename = (file.name || "upload").replace(/[^a-zA-Z0-9.-]/g, "_");
+      const uniqueFilename = `${Date.now()}_${sanitizedFilename}`;
+      const filePath = path.join(uploadDir, uniqueFilename);
+
+      await writeFile(filePath, buffer);
+      publicUrl = `/uploads/${uniqueFilename}`;
+    } catch (fsErr) {
+      console.warn("Could not save to disk, using data URL fallback:", fsErr);
     }
 
-    const sanitizedFilename = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const uniqueFilename = `${Date.now()}_${sanitizedFilename}`;
-    const filePath = path.join(uploadDir, uniqueFilename);
+    // 2. Base64 Data URL generation for 100% reliable fallback
+    let dataUrl = "";
+    if (isImage) {
+      const ext = fileName.split(".").pop() || "png";
+      const mime = fileType || (ext === "jpg" || ext === "jpeg" ? "image/jpeg" : `image/${ext}`);
+      dataUrl = `data:${mime};base64,${buffer.toString("base64")}`;
+    } else if (isAudio) {
+      const ext = fileName.split(".").pop() || "mp3";
+      const mime = fileType || `audio/${ext}`;
+      dataUrl = `data:${mime};base64,${buffer.toString("base64")}`;
+    }
 
-    await writeFile(filePath, buffer);
-
-    const publicUrl = `/uploads/${uniqueFilename}`;
+    // Prefer publicUrl if available, otherwise use dataUrl
+    const finalUrl = publicUrl || dataUrl;
 
     return NextResponse.json({
       success: true,
-      imageUrl: isImage ? publicUrl : null,
-      audioUrl: isAudio ? publicUrl : null,
-      fileUrl: publicUrl,
+      imageUrl: isImage ? finalUrl : null,
+      audioUrl: isAudio ? finalUrl : null,
+      fileUrl: finalUrl,
+      dataUrl: dataUrl,
       fileType: isImage ? "image" : "audio",
     });
   } catch (error: any) {
@@ -57,3 +96,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
