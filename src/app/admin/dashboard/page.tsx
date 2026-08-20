@@ -44,7 +44,7 @@ export default function AdminDashboardPage() {
             <div className="flex items-center gap-2 mb-1">
               <Shield className="w-4 h-4 text-red-600" />
               <span className="text-xs font-extrabold uppercase tracking-wider text-red-600">
-                SUPER ADMIN PANEL CONTROL
+                ADMIN PANEL
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">

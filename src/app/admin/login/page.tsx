@@ -52,7 +52,7 @@ export default function AdminLoginPage() {
           </div>
 
           <h1 className="text-lg font-black text-center text-slate-900 uppercase tracking-wide mb-1">
-            LOGIN SUPER ADMIN
+            LOGIN ADMIN
           </h1>
           <p className="text-xs text-slate-500 text-center mb-6">
             Akses terproteksi manajemen pos & bank soal
