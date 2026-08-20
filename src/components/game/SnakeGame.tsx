@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Clock, Trophy, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RefreshCw, Activity, Heart } from "lucide-react";
+import { Infinity as InfinityIcon, Trophy, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RefreshCw, Activity, Heart, Sparkles } from "lucide-react";
 import { formatTime } from "@/lib/utils";
 
 interface SnakeGameProps {
   postName: string;
   groupName: string;
-  timeLimit: number; // e.g. 300 seconds (5 minutes)
+  timeLimit: number; // Retained for prop compatibility
   onSubmitSnakeScore: (score: number) => void;
   isSubmitting: boolean;
 }
@@ -16,11 +16,11 @@ type Direction = "UP" | "DOWN" | "LEFT" | "RIGHT";
 type Position = { x: number; y: number };
 
 const GRID_SIZE = 14;
+const TOTAL_CELLS = GRID_SIZE * GRID_SIZE; // 196 spaces
 
 export default function SnakeGame({
   postName,
   groupName,
-  timeLimit,
   onSubmitSnakeScore,
   isSubmitting,
 }: SnakeGameProps) {
@@ -29,18 +29,20 @@ export default function SnakeGame({
     { x: 6, y: 8 },
   ]);
   const [direction, setDirection] = useState<Direction>("UP");
-  const [food, setFood] = useState<Position>({ x: 6, y: 3 });
+  const [food, setFood] = useState<Position | null>({ x: 6, y: 3 });
   const [foodsEaten, setFoodsEaten] = useState(0);
   const [lives, setLives] = useState(3); // 3 Kesempatan / Nyawa
   const [gameState, setGameState] = useState<"IDLE" | "PLAYING" | "LIFE_LOST" | "FINISHED">("IDLE");
-  const [timeLeft, setTimeLeft] = useState<number>(timeLimit || 300); // Default 5 Menit (300 Detik)
-  const [speedMs, setSpeedMs] = useState(200); // Kecepatan awal lebih santai (200ms)
+  const [speedMs, setSpeedMs] = useState(200); // Kecepatan awal santai (200ms)
 
   const directionRef = useRef<Direction>("UP");
   directionRef.current = direction;
 
   // Generate random food position not on snake body
-  const spawnFood = (currentSnake: Position[]) => {
+  const spawnFood = (currentSnake: Position[]): Position | null => {
+    if (currentSnake.length >= TOTAL_CELLS) {
+      return null; // Grid is full!
+    }
     let newX: number, newY: number;
     while (true) {
       newX = Math.floor(Math.random() * GRID_SIZE);
@@ -62,7 +64,6 @@ export default function SnakeGame({
     setFoodsEaten(0);
     setLives(3);
     setSpeedMs(200);
-    setTimeLeft(timeLimit || 300);
     setGameState("PLAYING");
   };
 
@@ -102,22 +103,6 @@ export default function SnakeGame({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [gameState, changeDirection]);
 
-  // Overall Session Countdown Timer (5 Minutes Total)
-  useEffect(() => {
-    if (gameState !== "PLAYING" && gameState !== "LIFE_LOST") return;
-
-    if (timeLeft <= 0) {
-      setGameState("FINISHED");
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [gameState, timeLeft]);
-
   // Game Movement Loop
   useEffect(() => {
     if (gameState !== "PLAYING") return;
@@ -147,9 +132,23 @@ export default function SnakeGame({
 
         // Food Eaten Check
         const newSnake = [head, ...prevSnake];
-        if (head.x === food.x && head.y === food.y) {
+        if (food && head.x === food.x && head.y === food.y) {
           setFoodsEaten((prev) => prev + 1);
-          setFood(spawnFood(newSnake));
+
+          // Grid Full Victory condition (Snake occupies all cells)
+          if (newSnake.length >= TOTAL_CELLS) {
+            setFood(null);
+            setGameState("FINISHED");
+            return newSnake;
+          }
+
+          const nextFood = spawnFood(newSnake);
+          if (!nextFood) {
+            setFood(null);
+            setGameState("FINISHED");
+          } else {
+            setFood(nextFood);
+          }
 
           // Ramp up speed gently (-3ms per food down to min 110ms)
           setSpeedMs((prev) => Math.max(110, prev - 3));
@@ -202,7 +201,7 @@ export default function SnakeGame({
             TANTANGAN ULAR (SNAKE GAME)
           </h3>
           <p className="text-xs text-slate-600 leading-relaxed mb-4 max-w-xs font-medium">
-            Kumpulkan poin makanan sebanyak-banyaknya dalam batas waktu <span className="font-bold text-red-600">5 Menit</span>! Anda memiliki <span className="font-bold text-red-600">3 Nyawa</span>. Jika lanjut ke nyawa berikutnya saat mati, skor di nyawa sebelumnya akan di-reset.
+            Kumpulkan poin makanan sebanyak-banyaknya tanpa batas waktu (<span className="font-bold text-red-600">Endless</span>)! Permainan berakhir jika ular memenuhi seluruh grid arena atau Anda kehabisan <span className="font-bold text-red-600">3 Nyawa</span>. Jika lanjut nyawa saat mati, skor sesi tersebut akan di-reset.
           </p>
 
           <button
@@ -260,8 +259,8 @@ export default function SnakeGame({
           {/* Header Bar */}
           <div className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl mb-3">
             <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-red-600">
-              <Clock className="w-3.5 h-3.5" />
-              <span>{formatTime(timeLeft)}</span>
+              <InfinityIcon className="w-4 h-4 text-red-600" />
+              <span>ENDLESS</span>
             </div>
 
             {/* Lives Indicator */}
@@ -289,13 +288,13 @@ export default function SnakeGame({
               gridTemplateRows: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
             }}
           >
-            {Array.from({ length: GRID_SIZE * GRID_SIZE }).map((_, index) => {
+            {Array.from({ length: TOTAL_CELLS }).map((_, index) => {
               const x = index % GRID_SIZE;
               const y = Math.floor(index / GRID_SIZE);
 
               const isHead = snake[0].x === x && snake[0].y === y;
               const isBody = snake.slice(1).some((seg) => seg.x === x && seg.y === y);
-              const isFoodItem = food.x === x && food.y === y;
+              const isFoodItem = food ? food.x === x && food.y === y : false;
 
               return (
                 <div
@@ -361,7 +360,7 @@ export default function SnakeGame({
             <Trophy className="w-7 h-7 text-red-600" />
           </div>
           <h3 className="text-base font-extrabold text-slate-900 uppercase mb-1">
-            PERMAINAN SELESAI!
+            {foodsEaten >= TOTAL_CELLS - 2 ? "🏆 PERFECT! ARENA PENUH!" : "PERMAINAN SELESAI!"}
           </h3>
           <p className="text-xs text-slate-600 mb-1">
             Makanan Dikumpulkan: <span className="font-bold text-slate-900">{foodsEaten} Buah</span>
