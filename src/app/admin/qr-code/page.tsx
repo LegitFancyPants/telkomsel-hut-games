@@ -111,45 +111,46 @@ export default function QrGeneratorPage() {
             Tidak ada pos aktif yang ditemukan. Silakan aktifkan pos terlebih dahulu pada halaman Manajemen Pos.
           </div>
         ) : (
-          /* Printable Grid Cards */
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 print:grid-cols-2 print:gap-8">
+          /* Printable Cards Container - 1 QR Code per printed page */
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 print:block print:w-full">
             {qrItems.map((item) => (
               <div
                 key={item.id}
-                className="p-6 bg-white border-2 border-red-600/20 rounded-3xl flex flex-col items-center text-center shadow-xl shadow-red-950/5 print:bg-white print:border-4 print:border-red-600 print:shadow-none print:break-inside-avoid"
+                style={{ pageBreakAfter: "always", breakAfter: "page" }}
+                className="p-6 bg-white border-2 border-red-600/20 rounded-3xl flex flex-col items-center text-center shadow-xl shadow-red-950/5 print:bg-white print:border-4 print:border-red-600 print:shadow-none print:min-h-[88vh] print:justify-between print:p-8 print:mb-0 print:rounded-3xl"
               >
                 <div className="w-full pb-3 mb-4 border-b border-slate-200 print:border-slate-300">
-                  <span className="text-[11px] font-black tracking-widest text-red-600 uppercase print:text-red-600">
+                  <span className="text-[11px] font-black tracking-widest text-red-600 uppercase print:text-red-600 print:text-sm">
                     POS PERMAINAN FISIK #{item.id}
                   </span>
-                  <h3 className="text-lg font-black text-slate-900 uppercase print:text-slate-950">
+                  <h3 className="text-xl sm:text-2xl font-black text-slate-900 uppercase print:text-3xl print:text-slate-950 print:mt-1">
                     {item.name}
                   </h3>
-                  <span className="text-[10px] font-mono text-slate-500 font-bold uppercase print:text-slate-600">
+                  <span className="text-[10px] font-mono text-slate-500 font-bold uppercase print:text-slate-700 print:text-xs">
                     Mode: {item.gameType} ({item.timeLimit}s)
                   </span>
                 </div>
 
-                {/* QR Image - Classic Black */}
+                {/* QR Image - Enlarged on Print */}
                 {item.qrDataUrl && (
-                  <div className="p-3 bg-white border-2 border-slate-200 rounded-2xl mb-4 shadow-sm">
+                  <div className="p-3 bg-white border-2 border-slate-200 rounded-2xl mb-4 shadow-sm print:border-4 print:border-slate-300 print:p-6 print:my-4">
                     <img
                       src={item.qrDataUrl}
                       alt={`QR Code ${item.name}`}
-                      className="w-48 h-48 object-contain"
+                      className="w-48 h-48 sm:w-56 sm:h-56 object-contain print:w-72 print:h-72"
                     />
                   </div>
                 )}
 
-                <p className="text-xs font-mono font-medium text-slate-600 mb-2 print:text-slate-700">
+                <p className="text-xs font-mono font-medium text-slate-600 mb-3 print:text-slate-800 print:text-sm">
                   URL: {originUrl}/pos/{item.slug}
                 </p>
 
-                <div className="w-full py-2.5 bg-red-50 border border-red-200 rounded-xl print:bg-slate-100 print:border-slate-300">
-                  <p className="text-xs font-black text-slate-900 uppercase tracking-wider print:text-slate-900">
-                    PIN POS: <span className="font-mono text-red-600 text-sm print:text-red-600 font-black">{item.pinCode}</span>
+                <div className="w-full py-3 bg-red-50 border border-red-200 rounded-2xl print:bg-slate-100 print:border-2 print:border-slate-300">
+                  <p className="text-sm font-black text-slate-900 uppercase tracking-wider print:text-slate-950 print:text-base">
+                    PIN POS: <span className="font-mono text-red-600 text-base print:text-red-600 print:text-lg font-black">{item.pinCode}</span>
                   </p>
-                  <p className="text-[10px] text-slate-500 print:text-slate-600">
+                  <p className="text-[10px] text-slate-500 print:text-slate-600 print:text-xs">
                     (Diberikan oleh penjaga pos fisik kepada kelompok peserta)
                   </p>
                 </div>
