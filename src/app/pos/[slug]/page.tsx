@@ -12,7 +12,7 @@ import SpeedMathGame from "@/components/game/SpeedMathGame";
 import WordScrambleGame from "@/components/game/WordScrambleGame";
 import SnakeGame from "@/components/game/SnakeGame";
 import { GroupData, PostData } from "@/lib/store";
-import { CheckCircle2, Trophy, RefreshCw, AlertCircle } from "lucide-react";
+import { CheckCircle2, Trophy, AlertCircle } from "lucide-react";
 
 export default function PosPage() {
   const params = useParams();
@@ -293,7 +293,7 @@ export default function PosPage() {
               </div>
             </div>
 
-            <div className="w-full space-y-2.5">
+            <div className="w-full">
               <button
                 type="button"
                 onClick={() => router.push("/leaderboard")}
@@ -301,19 +301,6 @@ export default function PosPage() {
               >
                 <Trophy className="w-4 h-4" />
                 <span>LIHAT LIVE LEADERBOARD</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  sessionStorage.removeItem(`pos_token_${slug}`);
-                  sessionStorage.removeItem(`pos_data_${slug}`);
-                  setStep("PIN_GATE");
-                }}
-                className="touch-btn w-full font-bold uppercase tracking-wider text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl flex items-center justify-center gap-2 border border-slate-200 transition-all"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                <span>KEMBALI KE INPUT PIN</span>
               </button>
             </div>
           </div>
