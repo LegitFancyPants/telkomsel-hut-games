@@ -108,10 +108,6 @@ export default function AdminLoginPage() {
               )}
             </button>
           </form>
-
-          <p className="text-[11px] text-slate-400 text-center mt-6">
-            Default credentials: <strong className="text-slate-700 font-mono">admin / admin123</strong>
-          </p>
         </div>
       </main>
     </div>
