@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getQuestionsByPostId, createQuestion, deleteQuestion } from "@/lib/store";
+import { getQuestionsByPostId, createQuestion, updateQuestion, deleteQuestion, deleteAllQuestions } from "@/lib/store";
 
 export async function GET(req: NextRequest) {
   try {
@@ -41,10 +41,40 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function PUT(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { id, promptText, imageUrl, options, correctOpt, points } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: "ID soal wajib diisi" }, { status: 400 });
+    }
+
+    const updated = await updateQuestion(Number(id), {
+      promptText,
+      imageUrl: imageUrl !== undefined ? imageUrl : undefined,
+      options: options ? (Array.isArray(options) ? options : JSON.parse(options)) : undefined,
+      correctOpt: correctOpt ? String(correctOpt).toUpperCase() : undefined,
+      points: points ? Number(points) : undefined,
+    });
+
+    return NextResponse.json({ success: true, question: updated });
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message || "Gagal memperbarui soal" }, { status: 500 });
+  }
+}
+
 export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
+    const postId = searchParams.get("postId");
+    const deleteAll = searchParams.get("all");
+
+    if (deleteAll === "true" && postId) {
+      await deleteAllQuestions(Number(postId));
+      return NextResponse.json({ success: true, message: "Semua soal berhasil dihapus" });
+    }
 
     if (!id) {
       return NextResponse.json({ error: "ID soal wajib diisi" }, { status: 400 });

@@ -70,9 +70,11 @@ let memoryQuestions: QuestionData[] = [
 ];
 
 const memoryScoreLogs: ScoreLogData[] = [];
+let isInitialSeeded = false;
 
-// Seed helper for Neon DB initialization
+// Seed helper for Neon DB initialization (Runs only once at first setup)
 async function ensureDbSeeded() {
+  if (isInitialSeeded) return;
   try {
     const postCount = await prisma.post.count();
     if (postCount === 0) {
@@ -89,37 +91,38 @@ async function ensureDbSeeded() {
           },
         });
       }
-    }
 
-    const groupCount = await prisma.group.count();
-    if (groupCount === 0) {
-      for (const g of memoryGroups) {
-        await prisma.group.create({
-          data: {
-            id: g.id,
-            name: g.name,
-            totalScore: g.totalScore,
-          },
-        });
+      const groupCount = await prisma.group.count();
+      if (groupCount === 0) {
+        for (const g of memoryGroups) {
+          await prisma.group.create({
+            data: {
+              id: g.id,
+              name: g.name,
+              totalScore: g.totalScore,
+            },
+          });
+        }
+      }
+
+      const questionCount = await prisma.question.count();
+      if (questionCount === 0) {
+        for (const q of memoryQuestions) {
+          await prisma.question.create({
+            data: {
+              id: q.id,
+              postId: q.postId,
+              promptText: q.promptText,
+              imageUrl: q.imageUrl || null,
+              options: JSON.stringify(q.options),
+              correctOpt: q.correctOpt,
+              points: q.points,
+            },
+          });
+        }
       }
     }
-
-    const questionCount = await prisma.question.count();
-    if (questionCount === 0) {
-      for (const q of memoryQuestions) {
-        await prisma.question.create({
-          data: {
-            id: q.id,
-            postId: q.postId,
-            promptText: q.promptText,
-            imageUrl: q.imageUrl || null,
-            options: JSON.stringify(q.options),
-            correctOpt: q.correctOpt,
-            points: q.points,
-          },
-        });
-      }
-    }
+    isInitialSeeded = true;
   } catch (e) {
     console.error("Db Seed Warning:", e);
   }
@@ -382,17 +385,16 @@ export async function getQuestionsByPostId(postId: number): Promise<QuestionData
   try {
     await ensureDbSeeded();
     const questions = await prisma.question.findMany({ where: { postId }, orderBy: { id: "asc" } });
-    if (questions.length > 0) {
-      return questions.map((q: any) => ({
-        id: q.id,
-        postId: q.postId,
-        promptText: q.promptText,
-        imageUrl: q.imageUrl,
-        options: JSON.parse(q.options),
-        correctOpt: q.correctOpt,
-        points: q.points,
-      }));
-    }
+    // Always return database query result directly (even if empty []) so deleting all questions works!
+    return questions.map((q: any) => ({
+      id: q.id,
+      postId: q.postId,
+      promptText: q.promptText,
+      imageUrl: q.imageUrl,
+      options: JSON.parse(q.options),
+      correctOpt: q.correctOpt,
+      points: q.points,
+    }));
   } catch (e) {
     console.error("getQuestionsByPostId Error:", e);
   }
@@ -411,7 +413,8 @@ export async function createQuestion(data: Omit<QuestionData, "id">): Promise<Qu
         points: data.points,
       },
     });
-    return {
+
+    const newQ = {
       id: created.id,
       postId: created.postId,
       promptText: created.promptText,
@@ -420,12 +423,58 @@ export async function createQuestion(data: Omit<QuestionData, "id">): Promise<Qu
       correctOpt: created.correctOpt,
       points: created.points,
     };
+
+    memoryQuestions.push(newQ);
+    return newQ;
   } catch (e) {
     console.error("createQuestion Error:", e);
   }
   const newQ: QuestionData = { id: memoryQuestions.length + 1, ...data };
   memoryQuestions.push(newQ);
   return newQ;
+}
+
+export async function updateQuestion(id: number, data: Partial<QuestionData>): Promise<QuestionData | null> {
+  try {
+    const updatePayload: any = {};
+    if (data.promptText !== undefined) updatePayload.promptText = data.promptText;
+    if (data.imageUrl !== undefined) updatePayload.imageUrl = data.imageUrl;
+    if (data.options !== undefined) updatePayload.options = JSON.stringify(data.options);
+    if (data.correctOpt !== undefined) updatePayload.correctOpt = data.correctOpt;
+    if (data.points !== undefined) updatePayload.points = data.points;
+
+    const updated = await prisma.question.update({
+      where: { id },
+      data: updatePayload,
+    });
+
+    const idx = memoryQuestions.findIndex((q) => q.id === id);
+    if (idx !== -1) {
+      memoryQuestions[idx] = {
+        ...memoryQuestions[idx],
+        ...data,
+      };
+    }
+
+    return {
+      id: updated.id,
+      postId: updated.postId,
+      promptText: updated.promptText,
+      imageUrl: updated.imageUrl,
+      options: JSON.parse(updated.options),
+      correctOpt: updated.correctOpt,
+      points: updated.points,
+    };
+  } catch (e) {
+    console.error("updateQuestion Error:", e);
+  }
+
+  const idx = memoryQuestions.findIndex((q) => q.id === id);
+  if (idx !== -1) {
+    memoryQuestions[idx] = { ...memoryQuestions[idx], ...data };
+    return memoryQuestions[idx];
+  }
+  return null;
 }
 
 export async function deleteQuestion(id: number): Promise<boolean> {
@@ -437,6 +486,18 @@ export async function deleteQuestion(id: number): Promise<boolean> {
     console.error("deleteQuestion Error:", e);
   }
   memoryQuestions = memoryQuestions.filter((q) => q.id !== id);
+  return true;
+}
+
+export async function deleteAllQuestions(postId: number): Promise<boolean> {
+  try {
+    await prisma.question.deleteMany({ where: { postId } });
+    memoryQuestions = memoryQuestions.filter((q) => q.postId !== postId);
+    return true;
+  } catch (e) {
+    console.error("deleteAllQuestions Error:", e);
+  }
+  memoryQuestions = memoryQuestions.filter((q) => q.postId !== postId);
   return true;
 }
 

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { PostData, QuestionData } from "@/lib/store";
-import { Plus, Trash2, ArrowLeft, FileText, CheckCircle2, HelpCircle, Eye, Calculator, Zap, Activity, Upload, Image as ImageIcon, X } from "lucide-react";
+import { Plus, Edit2, Trash2, ArrowLeft, FileText, CheckCircle2, HelpCircle, Eye, Calculator, Zap, Activity, Upload, Image as ImageIcon, X } from "lucide-react";
 import Link from "next/link";
 
 export default function AdminGamesPage() {
@@ -12,6 +12,7 @@ export default function AdminGamesPage() {
   const [questions, setQuestions] = useState<QuestionData[]>([]);
   const [notification, setNotification] = useState<string>("");
 
+  const [editingQuestionId, setEditingQuestionId] = useState<number | null>(null);
   const [promptText, setPromptText] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [isUploading, setIsUploading] = useState(false);
@@ -28,7 +29,9 @@ export default function AdminGamesPage() {
       const data = await res.json();
       if (data.posts && data.posts.length > 0) {
         setPosts(data.posts);
-        setSelectedPostId(data.posts[0].id);
+        if (!selectedPostId) {
+          setSelectedPostId(data.posts[0].id);
+        }
       }
     } catch (e) {
       console.error(e);
@@ -39,9 +42,7 @@ export default function AdminGamesPage() {
     try {
       const res = await fetch(`/api/admin/questions?postId=${postId}`);
       const data = await res.json();
-      if (data.questions) {
-        setQuestions(data.questions);
-      }
+      setQuestions(data.questions || []);
     } catch (e) {
       console.error(e);
     }
@@ -54,10 +55,35 @@ export default function AdminGamesPage() {
   useEffect(() => {
     if (selectedPostId) {
       fetchQuestions(selectedPostId);
+      resetForm();
     }
   }, [selectedPostId]);
 
   const selectedPost = posts.find((p) => p.id === selectedPostId);
+
+  const resetForm = () => {
+    setEditingQuestionId(null);
+    setPromptText("");
+    setImageUrl("");
+    setOptionA("");
+    setOptionB("");
+    setOptionC("");
+    setOptionD("");
+    setCorrectOpt("A");
+    setPoints(20);
+  };
+
+  const handleStartEdit = (q: QuestionData) => {
+    setEditingQuestionId(q.id);
+    setPromptText(q.promptText);
+    setImageUrl(q.imageUrl || "");
+    setOptionA(q.options[0] || "");
+    setOptionB(q.options[1] || "");
+    setOptionC(q.options[2] || "");
+    setOptionD(q.options[3] || "");
+    setCorrectOpt(q.correctOpt || "A");
+    setPoints(q.points || 20);
+  };
 
   // File Upload Handler
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,32 +118,67 @@ export default function AdminGamesPage() {
     }
   };
 
-  const handleAddQuestion = async (e: React.FormEvent) => {
+  const handleSubmitQuestion = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPostId || !promptText || !optionA || !optionB || !optionC || !optionD) return;
 
     try {
-      const res = await fetch("/api/admin/questions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          postId: selectedPostId,
-          promptText,
-          imageUrl: imageUrl.trim() || null,
-          options: [optionA, optionB, optionC, optionD],
-          correctOpt,
-          points,
-        }),
-      });
+      if (editingQuestionId) {
+        // Edit existing question
+        const res = await fetch("/api/admin/questions", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: editingQuestionId,
+            promptText,
+            imageUrl: imageUrl.trim() || null,
+            options: [optionA, optionB, optionC, optionD],
+            correctOpt,
+            points,
+          }),
+        });
 
-      if (res.ok) {
-        setNotification("Pertanyaan kuis / Tebak Gambar baru berhasil ditambahkan");
-        setPromptText("");
-        setImageUrl("");
-        setOptionA("");
-        setOptionB("");
-        setOptionC("");
-        setOptionD("");
+        if (res.ok) {
+          setNotification(`Soal #${editingQuestionId} berhasil diperbarui`);
+          resetForm();
+          fetchQuestions(selectedPostId);
+          setTimeout(() => setNotification(""), 3000);
+        }
+      } else {
+        // Create new question
+        const res = await fetch("/api/admin/questions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            postId: selectedPostId,
+            promptText,
+            imageUrl: imageUrl.trim() || null,
+            options: [optionA, optionB, optionC, optionD],
+            correctOpt,
+            points,
+          }),
+        });
+
+        if (res.ok) {
+          setNotification("Pertanyaan kuis baru berhasil ditambahkan");
+          resetForm();
+          fetchQuestions(selectedPostId);
+          setTimeout(() => setNotification(""), 3000);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleDeleteQuestion = async (id: number) => {
+    if (!confirm(`Apakah Anda yakin ingin menghapus soal #${id}?`)) return;
+
+    try {
+      const res = await fetch(`/api/admin/questions?id=${id}`, { method: "DELETE" });
+      if (res.ok && selectedPostId) {
+        setNotification(`Soal #${id} berhasil dihapus`);
+        if (editingQuestionId === id) resetForm();
         fetchQuestions(selectedPostId);
         setTimeout(() => setNotification(""), 3000);
       }
@@ -126,11 +187,15 @@ export default function AdminGamesPage() {
     }
   };
 
-  const handleDeleteQuestion = async (id: number) => {
+  const handleDeleteAllQuestions = async () => {
+    if (!selectedPostId) return;
+    if (!confirm(`Apakah Anda YAKIN ingin menghapus SEMUA SOAL pada ${selectedPost?.name}? Tindakan ini tidak dapat dibatalkan.`)) return;
+
     try {
-      const res = await fetch(`/api/admin/questions?id=${id}`, { method: "DELETE" });
-      if (res.ok && selectedPostId) {
-        setNotification(`Soal #${id} berhasil dihapus`);
+      const res = await fetch(`/api/admin/questions?postId=${selectedPostId}&all=true`, { method: "DELETE" });
+      if (res.ok) {
+        setNotification(`Seluruh soal pada ${selectedPost?.name} berhasil dihapus`);
+        resetForm();
         fetchQuestions(selectedPostId);
         setTimeout(() => setNotification(""), 3000);
       }
@@ -155,7 +220,7 @@ export default function AdminGamesPage() {
               PENGATURAN KONTEN & BANK SOAL GAME
             </h1>
             <p className="text-xs text-slate-400">
-              Upload file gambar untuk soal Tebak Gambar, kelola pertanyaan kuis, dan kunci jawaban per pos
+              Edit soal kuis, tambah baru, unggah gambar Tebak Gambar, atau hapus semua soal per pos
             </p>
           </div>
         </div>
@@ -191,7 +256,7 @@ export default function AdminGamesPage() {
 
         {selectedPost && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column */}
+            {/* Left Column (Form) */}
             <div className="lg:col-span-1 space-y-4">
               <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl">
                 <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider mb-2">
@@ -213,11 +278,23 @@ export default function AdminGamesPage() {
 
               {selectedPost.gameType === "quiz" && (
                 <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl">
-                  <h3 className="text-xs font-bold uppercase text-slate-200 tracking-wider mb-4">
-                    TAMBAH SOAL KUIS / TEBAK GAMBAR
-                  </h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xs font-bold uppercase text-slate-200 tracking-wider">
+                      {editingQuestionId ? `EDIT SOAL #${editingQuestionId}` : "TAMBAH SOAL KUIS BARU"}
+                    </h3>
+                    {editingQuestionId && (
+                      <button
+                        type="button"
+                        onClick={resetForm}
+                        className="text-[11px] font-bold text-amber-400 hover:underline flex items-center gap-1"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                        <span>BATAL EDIT</span>
+                      </button>
+                    )}
+                  </div>
 
-                  <form onSubmit={handleAddQuestion} className="space-y-3">
+                  <form onSubmit={handleSubmitQuestion} className="space-y-3">
                     <div>
                       <label className="block text-[11px] font-semibold uppercase text-slate-400 mb-1">
                         Teks Pertanyaan
@@ -339,14 +416,14 @@ export default function AdminGamesPage() {
                       disabled={isUploading}
                       className="w-full mt-2 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 font-bold text-xs text-white uppercase shadow-lg shadow-sky-950 disabled:opacity-40"
                     >
-                      SIMPAN PERTANYAAN
+                      {editingQuestionId ? "SIMPAN PERUBAHAN SOAL" : "SIMPAN SOAL BARU"}
                     </button>
                   </form>
                 </div>
               )}
             </div>
 
-            {/* Right Column */}
+            {/* Right Column (List) */}
             <div className="lg:col-span-2">
               {selectedPost.gameType === "quiz" ? (
                 <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
@@ -354,6 +431,17 @@ export default function AdminGamesPage() {
                     <h2 className="text-sm font-bold text-slate-200 uppercase tracking-wider">
                       BANK SOAL KUIS - {selectedPost.name} ({questions.length} SOAL)
                     </h2>
+
+                    {questions.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleDeleteAllQuestions}
+                        className="px-3 py-1.5 rounded-xl bg-red-950/80 border border-red-800 hover:border-red-500 text-red-300 hover:text-white text-xs font-bold transition-all flex items-center gap-1.5"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>HAPUS SEMUA SOAL</span>
+                      </button>
+                    )}
                   </div>
 
                   <div className="divide-y divide-slate-800">
@@ -402,14 +490,25 @@ export default function AdminGamesPage() {
                             </div>
                           </div>
 
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteQuestion(q.id)}
-                            className="p-2 rounded-xl bg-slate-950 border border-slate-800 hover:border-red-500 text-slate-400 hover:text-red-400 transition-all shrink-0"
-                            title="Hapus Soal"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => handleStartEdit(q)}
+                              className="p-2 rounded-xl bg-slate-950 border border-slate-800 hover:border-sky-500 text-slate-300 hover:text-white transition-all"
+                              title="Edit Soal Ini"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteQuestion(q.id)}
+                              className="p-2 rounded-xl bg-slate-950 border border-slate-800 hover:border-red-500 text-slate-400 hover:text-red-400 transition-all"
+                              title="Hapus Soal Ini"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
                       ))
                     )}
