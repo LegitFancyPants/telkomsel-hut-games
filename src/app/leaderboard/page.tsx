@@ -60,16 +60,6 @@ export default function LeaderboardPage() {
               <span className="text-xs font-bold uppercase tracking-wider text-red-600">
                 POS-TO-POS RALLY GAMES
               </span>
-              <span
-                className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${
-                  isLiveConnected
-                    ? "bg-emerald-50 border-emerald-200 text-emerald-700 font-bold"
-                    : "bg-amber-50 border-amber-200 text-amber-700 font-bold"
-                }`}
-              >
-                <Radio className="w-3 h-3 animate-pulse" />
-                <span>{isLiveConnected ? "LIVE SYNC" : "OFFLINE POLLING"}</span>
-              </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
               Leaderboard Real-Time
