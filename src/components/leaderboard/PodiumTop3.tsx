@@ -27,7 +27,7 @@ export default function PodiumTop3({ groups }: PodiumTop3Props) {
         <div className="flex flex-col items-center">
           <div className="text-center mb-2">
             <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase block">
-              PERINGKAT 2
+              JUARA 2
             </span>
             <h4 className="text-xs sm:text-sm font-bold text-slate-800 truncate max-w-[110px] sm:max-w-none">
               {second.name}
@@ -74,7 +74,7 @@ export default function PodiumTop3({ groups }: PodiumTop3Props) {
         <div className="flex flex-col items-center">
           <div className="text-center mb-2">
             <span className="text-[10px] font-bold tracking-widest text-amber-600 uppercase block">
-              PERINGKAT 3
+              JUARA 3
             </span>
             <h4 className="text-xs sm:text-sm font-bold text-slate-800 truncate max-w-[110px] sm:max-w-none">
               {third.name}
