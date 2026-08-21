@@ -56,8 +56,7 @@ export default function GroupSelector({ postName, groups, replayMap, onSelectGro
       <div className="space-y-2.5 mb-4 max-h-[320px] overflow-y-auto pr-1">
         {groups.map((group) => {
           const isSelected = selectedGroupId === group.id;
-          const replayInfo = replayMap?.[group.id];
-          const isLimitReached = replayInfo?.isLimitReached || false;
+          const isLimitReached = replayMap?.[group.id]?.isLimitReached || false;
 
           return (
             <button
@@ -90,21 +89,6 @@ export default function GroupSelector({ postName, groups, replayMap, onSelectGro
                   <span className="font-bold text-sm tracking-wide">
                     {group.name}
                   </span>
-                  <div className="mt-0.5">
-                    {!replayInfo || replayInfo.totalSubmissions === 0 ? (
-                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                        Belum Main (10x Mengulang Tersedia)
-                      </span>
-                    ) : isLimitReached ? (
-                      <span className="text-[10px] font-bold text-red-700 bg-red-100 px-1.5 py-0.5 rounded border border-red-300">
-                        JATAH MENGULANG HABIS (10/10)
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                        Sisa Mengulang: {replayInfo.replaysLeft}/10
-                      </span>
-                    )}
-                  </div>
                 </div>
               </div>
             </button>
