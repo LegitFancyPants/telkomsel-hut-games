@@ -15,6 +15,7 @@ export default function AdminGroupsPage() {
   const [editingGroup, setEditingGroup] = useState<GroupData | null>(null);
   const [groupNameInput, setGroupNameInput] = useState<string>("");
   const [scoreInput, setScoreInput] = useState<number>(0);
+  const [modalError, setModalError] = useState<string>("");
 
   const fetchGroups = async () => {
     setIsLoading(true);
@@ -39,6 +40,7 @@ export default function AdminGroupsPage() {
     setEditingGroup(null);
     setGroupNameInput("");
     setScoreInput(0);
+    setModalError("");
     setIsModalOpen(true);
   };
 
@@ -46,11 +48,20 @@ export default function AdminGroupsPage() {
     setEditingGroup(group);
     setGroupNameInput(group.name);
     setScoreInput(group.totalScore);
+    setModalError("");
     setIsModalOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setModalError("");
+
+    const trimmedName = groupNameInput.trim();
+    if (!trimmedName) {
+      setModalError("Nama kelompok tidak boleh kosong");
+      return;
+    }
+
     try {
       if (editingGroup) {
         // Edit group / score override
@@ -59,29 +70,36 @@ export default function AdminGroupsPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             id: editingGroup.id,
-            name: groupNameInput,
+            name: trimmedName,
             scoreOverride: scoreInput,
           }),
         });
-        if (res.ok) {
-          setNotification(`Kelompok #${editingGroup.id} berhasil diperbarui`);
+        const data = await res.json();
+        if (!res.ok) {
+          setModalError(data.error || "Gagal memperbarui kelompok");
+          return;
         }
+        setNotification(`Kelompok #${editingGroup.id} berhasil diperbarui`);
       } else {
         // Create new group
         const res = await fetch("/api/admin/groups", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: groupNameInput }),
+          body: JSON.stringify({ name: trimmedName }),
         });
-        if (res.ok) {
-          setNotification("Kelompok baru berhasil ditambahkan");
+        const data = await res.json();
+        if (!res.ok) {
+          setModalError(data.error || "Gagal menambahkan kelompok baru");
+          return;
         }
+        setNotification("Kelompok baru berhasil ditambahkan");
       }
       setIsModalOpen(false);
       fetchGroups();
       setTimeout(() => setNotification(""), 3000);
     } catch (e) {
       console.error(e);
+      setModalError("Terjadi kesalahan jaringan/server");
     }
   };
 
@@ -222,6 +240,12 @@ export default function AdminGroupsPage() {
             <h2 className="text-base font-black text-slate-900 uppercase tracking-wide mb-4">
               {editingGroup ? `EDIT KELOMPOK #${editingGroup.id}` : "TAMBAH KELOMPOK BARU"}
             </h2>
+
+            {modalError && (
+              <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-xs font-bold text-red-600">
+                {modalError}
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>

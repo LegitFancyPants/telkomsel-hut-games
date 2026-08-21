@@ -73,6 +73,16 @@ let memoryQuestions: QuestionData[] = [
 const memoryScoreLogs: ScoreLogData[] = [];
 let isInitialSeeded = false;
 
+export async function fixPostgresSequences() {
+  try {
+    await prisma.$executeRawUnsafe(`SELECT setval(pg_get_serial_sequence('"groups"', 'id'), COALESCE((SELECT MAX(id) FROM "groups"), 1));`);
+    await prisma.$executeRawUnsafe(`SELECT setval(pg_get_serial_sequence('"posts"', 'id'), COALESCE((SELECT MAX(id) FROM "posts"), 1));`);
+    await prisma.$executeRawUnsafe(`SELECT setval(pg_get_serial_sequence('"questions"', 'id'), COALESCE((SELECT MAX(id) FROM "questions"), 1));`);
+  } catch (e) {
+    console.error("Sequence sync warning:", e);
+  }
+}
+
 // Seed helper for Neon DB initialization (Runs only once at first setup)
 async function ensureDbSeeded() {
   if (isInitialSeeded) return;
@@ -124,6 +134,7 @@ async function ensureDbSeeded() {
         }
       }
     }
+    await fixPostgresSequences();
     isInitialSeeded = true;
   } catch (e) {
     console.error("Db Seed Warning:", e);
@@ -311,14 +322,58 @@ export async function getGroupById(id: number): Promise<GroupData | null> {
 }
 
 export async function createGroup(name: string): Promise<GroupData> {
+  await ensureDbSeeded();
+
+  // Explicit check for existing group name
+  try {
+    const existing = await prisma.group.findUnique({ where: { name } });
+    if (existing) {
+      throw new Error(`Nama kelompok "${name}" sudah digunakan. Gunakan nama lain.`);
+    }
+  } catch (e: any) {
+    if (e.message?.includes("sudah digunakan")) throw e;
+  }
+
   try {
     const created = await prisma.group.create({
       data: { name, totalScore: 0 },
     });
+    const idx = memoryGroups.findIndex((g) => g.id === created.id);
+    if (idx !== -1) {
+      memoryGroups[idx] = created;
+    } else {
+      memoryGroups.push(created);
+    }
     return created;
-  } catch (e) {
+  } catch (e: any) {
     console.error("createGroup Error:", e);
+    // If sequence or unique constraint error on primary key, attempt sequence sync and retry
+    if (e.code === "P2002" || e.message?.includes("Unique constraint")) {
+      try {
+        await fixPostgresSequences();
+        const createdRetry = await prisma.group.create({
+          data: { name, totalScore: 0 },
+        });
+        const idx = memoryGroups.findIndex((g) => g.id === createdRetry.id);
+        if (idx !== -1) {
+          memoryGroups[idx] = createdRetry;
+        } else {
+          memoryGroups.push(createdRetry);
+        }
+        return createdRetry;
+      } catch (retryErr: any) {
+        console.error("Retry createGroup Error:", retryErr);
+        if (retryErr.code === "P2002") {
+          throw new Error(`Nama kelompok "${name}" sudah digunakan. Gunakan nama lain.`);
+        }
+        throw retryErr;
+      }
+    }
+    if (e.code) {
+      throw e;
+    }
   }
+
   const newGroup: GroupData = { id: memoryGroups.length + 1, name, totalScore: 0, updatedAt: new Date() };
   memoryGroups.push(newGroup);
   return newGroup;

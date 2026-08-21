@@ -15,14 +15,16 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { name } = body;
 
-    if (!name) {
+    const trimmedName = typeof name === "string" ? name.trim() : "";
+
+    if (!trimmedName) {
       return NextResponse.json({ error: "Nama kelompok wajib diisi" }, { status: 400 });
     }
 
-    const created = await createGroup(name);
+    const created = await createGroup(trimmedName);
     return NextResponse.json({ success: true, group: created });
   } catch (e: any) {
-    return NextResponse.json({ error: e.message || "Gagal membuat kelompok baru" }, { status: 500 });
+    return NextResponse.json({ error: e.message || "Gagal membuat kelompok baru" }, { status: 400 });
   }
 }
 
