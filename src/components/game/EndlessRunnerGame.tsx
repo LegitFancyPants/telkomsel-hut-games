@@ -686,7 +686,7 @@ export default function EndlessRunnerGame({
             <p className="text-sm font-black text-red-600 font-mono mt-1">+{pointsEarned} PTS</p>
           </div>
 
-          <div className="w-full space-y-2">
+          <div className="w-full">
             <button
               type="button"
               onClick={handleFinishSubmit}
@@ -694,15 +694,6 @@ export default function EndlessRunnerGame({
               className="touch-btn w-full font-extrabold uppercase tracking-wider text-sm bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-lg transition-all py-3"
             >
               {isSubmitting ? "MEMPROSES..." : `SUBMIT SKOR (+${pointsEarned} PTS)`}
-            </button>
-
-            <button
-              type="button"
-              onClick={handleStart}
-              className="touch-btn w-full font-bold uppercase tracking-wider text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl py-2.5 transition-all flex items-center justify-center gap-1.5 border border-slate-300"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>COBA LARI LAGI</span>
             </button>
           </div>
         </div>
