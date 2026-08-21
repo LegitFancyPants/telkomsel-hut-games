@@ -13,7 +13,7 @@ import WordScrambleGame from "@/components/game/WordScrambleGame";
 import SnakeGame from "@/components/game/SnakeGame";
 import EndlessRunnerGame from "@/components/game/EndlessRunnerGame";
 import { GroupData, PostData } from "@/lib/store";
-import { CheckCircle2, Trophy, AlertCircle } from "lucide-react";
+import { CheckCircle2, Trophy, AlertCircle, RotateCcw, Users } from "lucide-react";
 
 export default function PosPage() {
   const params = useParams();
@@ -343,14 +343,40 @@ export default function PosPage() {
               )}
             </div>
 
-            <div className="w-full">
+            <div className="w-full space-y-2.5">
+              {resultSummary.replaysLeft === undefined || resultSummary.replaysLeft > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => selectedGroup && handleSelectGroup(selectedGroup)}
+                  className="touch-btn w-full font-extrabold uppercase tracking-wider text-xs bg-red-600 hover:bg-red-700 active:bg-red-800 text-white py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-red-600/20 transition-all"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  <span>
+                    MAIN LAGI ({resultSummary.replaysLeft !== undefined ? `${resultSummary.replaysLeft}x Mengulang Tersisa` : "Gunakan Jatah"})
+                  </span>
+                </button>
+              ) : (
+                <div className="w-full p-2.5 rounded-xl bg-red-50 border border-red-200 text-xs font-bold text-red-600">
+                  Jatah 10x Mengulang Kelompok Ini Sudah Habis
+                </div>
+              )}
+
               <button
                 type="button"
                 onClick={() => router.push("/leaderboard")}
-                className="touch-btn w-full font-extrabold uppercase tracking-wider text-xs bg-red-600 hover:bg-red-700 text-white rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-red-600/20 transition-all"
+                className="touch-btn w-full font-extrabold uppercase tracking-wider text-xs bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-xl flex items-center justify-center gap-2 shadow-md transition-all"
               >
                 <Trophy className="w-4 h-4" />
                 <span>LIHAT LIVE LEADERBOARD</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStep("GROUP_SELECT")}
+                className="touch-btn w-full font-bold uppercase tracking-wider text-[11px] bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-all"
+              >
+                <Users className="w-3.5 h-3.5" />
+                <span>PILIH KELOMPOK LAIN</span>
               </button>
             </div>
           </div>
