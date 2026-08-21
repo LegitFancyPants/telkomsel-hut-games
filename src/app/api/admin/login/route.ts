@@ -6,9 +6,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { username, password } = body;
 
-    // Standard Super Admin validation (admin / admin123 or from env)
+    // Standard Super Admin validation (admin / akutelkomsel or from env)
     const adminUser = process.env.ADMIN_USER || "admin";
-    const adminPass = process.env.ADMIN_PASS || "admin123";
+    const adminPass = process.env.ADMIN_PASS || "akutelkomsel";
 
     if (username === adminUser && password === adminPass) {
       const token = await signToken({ role: "admin", username }, "24h");
