@@ -369,15 +369,6 @@ export default function PosPage() {
                 <Trophy className="w-4 h-4" />
                 <span>LIHAT LIVE LEADERBOARD</span>
               </button>
-
-              <button
-                type="button"
-                onClick={() => setStep("GROUP_SELECT")}
-                className="touch-btn w-full font-bold uppercase tracking-wider text-[11px] bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-all"
-              >
-                <Users className="w-3.5 h-3.5" />
-                <span>PILIH KELOMPOK LAIN</span>
-              </button>
             </div>
           </div>
         )}
