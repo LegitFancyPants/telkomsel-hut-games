@@ -31,7 +31,7 @@ export default function SnakeGame({
   const [direction, setDirection] = useState<Direction>("UP");
   const [food, setFood] = useState<Position | null>({ x: 6, y: 3 });
   const [foodsEaten, setFoodsEaten] = useState(0);
-  const [lives, setLives] = useState(3); // 3 Kesempatan / Nyawa
+  const [lives, setLives] = useState(2); // 2 Kesempatan / Nyawa
   const [gameState, setGameState] = useState<"IDLE" | "PLAYING" | "LIFE_LOST" | "FINISHED">("IDLE");
   const [speedMs, setSpeedMs] = useState(200); // Kecepatan awal santai (200ms)
 
@@ -62,7 +62,7 @@ export default function SnakeGame({
     setDirection("UP");
     setFood(spawnFood(initialSnake));
     setFoodsEaten(0);
-    setLives(3);
+    setLives(2);
     setSpeedMs(200);
     setGameState("PLAYING");
   };
@@ -201,7 +201,7 @@ export default function SnakeGame({
             TANTANGAN ULAR (SNAKE GAME)
           </h3>
           <p className="text-xs text-slate-600 leading-relaxed mb-4 max-w-xs font-medium">
-            Kumpulkan poin makanan sebanyak-banyaknya tanpa batas waktu (<span className="font-bold text-red-600">Endless</span>)! Permainan berakhir jika ular memenuhi seluruh grid arena atau Anda kehabisan <span className="font-bold text-red-600">3 Nyawa</span>. Jika lanjut nyawa saat mati, skor sesi tersebut akan di-reset.
+            Kumpulkan poin makanan sebanyak-banyaknya tanpa batas waktu (<span className="font-bold text-red-600">Endless</span>)! Permainan berakhir jika ular memenuhi seluruh grid arena atau Anda kehabisan <span className="font-bold text-red-600">2 Nyawa</span>. Jika lanjut nyawa saat mati, skor sesi tersebut akan di-reset.
           </p>
 
           <button
@@ -221,7 +221,7 @@ export default function SnakeGame({
           </div>
 
           <h3 className="text-base font-extrabold text-slate-900 uppercase mb-1">
-            {lives === 2 ? "NYAWA KE-1 HABIS!" : "NYAWA KE-2 HABIS!"}
+            NYAWA KE-1 HABIS!
           </h3>
 
           <div className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 my-3 text-center">
@@ -248,7 +248,7 @@ export default function SnakeGame({
               onClick={handleUseNextLife}
               className="touch-btn w-full font-extrabold uppercase tracking-wider text-xs bg-slate-100 hover:bg-slate-200 active:bg-slate-300 border border-slate-300 text-slate-800 rounded-xl py-2.5 transition-all flex items-center justify-center gap-1.5"
             >
-              <span>LANJUT NYAWA KE-{4 - lives} (RESET SKOR KE 0)</span>
+              <span>LANJUT NYAWA KE-{3 - lives} (RESET SKOR KE 0)</span>
             </button>
           </div>
         </div>
@@ -265,7 +265,7 @@ export default function SnakeGame({
 
             {/* Lives Indicator */}
             <div className="flex items-center gap-1">
-              {[1, 2, 3].map((l) => (
+              {[1, 2].map((l) => (
                 <Heart
                   key={l}
                   className={`w-4 h-4 ${
