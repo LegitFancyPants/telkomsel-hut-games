@@ -440,12 +440,15 @@ export async function deleteGroup(id: number): Promise<boolean> {
 export async function resetAllScores(): Promise<boolean> {
   try {
     await prisma.group.updateMany({ data: { totalScore: 0 } });
+    await prisma.scoreLog.deleteMany({});
     memoryGroups.forEach((g) => (g.totalScore = 0));
+    memoryScoreLogs.length = 0;
     return true;
   } catch (e) {
     console.error("resetAllScores Error:", e);
   }
   memoryGroups.forEach((g) => (g.totalScore = 0));
+  memoryScoreLogs.length = 0;
   return true;
 }
 
@@ -574,27 +577,116 @@ export async function deleteAllQuestions(postId: number): Promise<boolean> {
   return true;
 }
 
+export interface ReplayStatus {
+  totalSubmissions: number;
+  replaysUsed: number;
+  replaysLeft: number;
+  isLimitReached: boolean;
+  maxReplays: number;
+}
+
+export async function getGroupPosReplayStatus(groupId: number, postId: number): Promise<ReplayStatus> {
+  const MAX_REPLAY_ATTEMPTS = 10;
+  let totalSubmissions = 0;
+
+  try {
+    await ensureDbSeeded();
+    totalSubmissions = await prisma.scoreLog.count({
+      where: { groupId, postId },
+    });
+  } catch (e) {
+    console.error("getGroupPosReplayStatus Error:", e);
+    totalSubmissions = memoryScoreLogs.filter((l) => l.groupId === groupId && l.postId === postId).length;
+  }
+
+  const replaysUsed = Math.max(0, totalSubmissions - 1);
+  const replaysLeft = Math.max(0, MAX_REPLAY_ATTEMPTS - replaysUsed);
+  const isLimitReached = totalSubmissions >= 11;
+
+  return {
+    totalSubmissions,
+    replaysUsed,
+    replaysLeft,
+    isLimitReached,
+    maxReplays: MAX_REPLAY_ATTEMPTS,
+  };
+}
+
+export async function getPosGroupReplayMap(postId: number): Promise<Record<number, ReplayStatus>> {
+  const MAX_REPLAY_ATTEMPTS = 10;
+  const map: Record<number, ReplayStatus> = {};
+
+  try {
+    await ensureDbSeeded();
+    const logs = await prisma.scoreLog.findMany({
+      where: { postId },
+      select: { groupId: true },
+    });
+
+    const counts: Record<number, number> = {};
+    for (const log of logs) {
+      counts[log.groupId] = (counts[log.groupId] || 0) + 1;
+    }
+
+    for (const [gidStr, count] of Object.entries(counts)) {
+      const gid = Number(gidStr);
+      const replaysUsed = Math.max(0, count - 1);
+      map[gid] = {
+        totalSubmissions: count,
+        replaysUsed,
+        replaysLeft: Math.max(0, MAX_REPLAY_ATTEMPTS - replaysUsed),
+        isLimitReached: count >= 11,
+        maxReplays: MAX_REPLAY_ATTEMPTS,
+      };
+    }
+  } catch (e) {
+    console.error("getPosGroupReplayMap Error:", e);
+    const counts: Record<number, number> = {};
+    for (const log of memoryScoreLogs) {
+      if (log.postId === postId) {
+        counts[log.groupId] = (counts[log.groupId] || 0) + 1;
+      }
+    }
+    for (const [gidStr, count] of Object.entries(counts)) {
+      const gid = Number(gidStr);
+      const replaysUsed = Math.max(0, count - 1);
+      map[gid] = {
+        totalSubmissions: count,
+        replaysUsed,
+        replaysLeft: Math.max(0, MAX_REPLAY_ATTEMPTS - replaysUsed),
+        isLimitReached: count >= 11,
+        maxReplays: MAX_REPLAY_ATTEMPTS,
+      };
+    }
+  }
+
+  return map;
+}
+
 export async function submitScore(
   groupId: number,
   postId: number,
   pointsEarned: number,
   deviceToken: string
-): Promise<{ success: boolean; newTotalScore: number; pointsEarned: number }> {
+): Promise<{
+  success: boolean;
+  newTotalScore: number;
+  pointsEarned: number;
+  totalSubmissions: number;
+  replaysUsed: number;
+  replaysLeft: number;
+}> {
+  const MAX_REPLAY_ATTEMPTS = 10;
+
   try {
     await ensureDbSeeded();
     const updatedGroup = await prisma.$transaction(async (tx: any) => {
-      const recentLog = await tx.scoreLog.findFirst({
-        where: {
-          postId,
-          deviceToken,
-          createdAt: {
-            gte: new Date(Date.now() - 5 * 60 * 1000),
-          },
-        },
+      const submissionCount = await tx.scoreLog.count({
+        where: { groupId, postId },
       });
 
-      if (recentLog) {
-        throw new Error("Pemberitahuan: Perangkat ini telah melakukan submission di pos ini dalam 5 menit terakhir.");
+      if (submissionCount >= 11) {
+        throw new Error("Jatah 10x mengulang kelompok ini di pos ini sudah habis.");
       }
 
       await tx.scoreLog.create({
@@ -613,19 +705,31 @@ export async function submitScore(
         },
       });
 
-      return group;
+      return { group, newCount: submissionCount + 1 };
     });
+
+    const totalSubmissions = updatedGroup.newCount;
+    const replaysUsed = Math.max(0, totalSubmissions - 1);
+    const replaysLeft = Math.max(0, MAX_REPLAY_ATTEMPTS - replaysUsed);
 
     return {
       success: true,
-      newTotalScore: updatedGroup.totalScore,
+      newTotalScore: updatedGroup.group.totalScore,
       pointsEarned,
+      totalSubmissions,
+      replaysUsed,
+      replaysLeft,
     };
   } catch (e: any) {
-    if (e.message?.includes("5 menit terakhir")) {
+    if (e.message?.includes("mengulang kelompok ini")) {
       throw e;
     }
     console.error("submitScore Error:", e);
+    const existingLogs = memoryScoreLogs.filter((l) => l.groupId === groupId && l.postId === postId);
+    if (existingLogs.length >= 11) {
+      throw new Error("Jatah 10x mengulang kelompok ini di pos ini sudah habis.");
+    }
+
     const group = memoryGroups.find((g: GroupData) => g.id === groupId);
     if (group) {
       group.totalScore += pointsEarned;
@@ -639,10 +743,18 @@ export async function submitScore(
       deviceToken,
       createdAt: new Date(),
     });
+
+    const totalSubmissions = existingLogs.length + 1;
+    const replaysUsed = Math.max(0, totalSubmissions - 1);
+    const replaysLeft = Math.max(0, MAX_REPLAY_ATTEMPTS - replaysUsed);
+
     return {
       success: true,
       newTotalScore: group ? group.totalScore : pointsEarned,
       pointsEarned,
+      totalSubmissions,
+      replaysUsed,
+      replaysLeft,
     };
   }
 }

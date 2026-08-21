@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import PinPad from "@/components/game/PinPad";
-import GroupSelector from "@/components/game/GroupSelector";
+import GroupSelector, { ReplayStatusInfo } from "@/components/game/GroupSelector";
 import QuizEngine from "@/components/game/QuizEngine";
 import TapReflexGame from "@/components/game/TapReflexGame";
 import MemoryGame from "@/components/game/MemoryGame";
@@ -25,6 +25,7 @@ export default function PosPage() {
 
   const [postData, setPostData] = useState<PostData | null>(null);
   const [groups, setGroups] = useState<GroupData[]>([]);
+  const [replayMap, setReplayMap] = useState<Record<number, ReplayStatusInfo>>({});
   const [questions, setQuestions] = useState<any[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<GroupData | null>(null);
   const [posToken, setPosToken] = useState<string>("");
@@ -35,7 +36,26 @@ export default function PosPage() {
     pointsEarned: number;
     newTotalScore: number;
     groupName: string;
+    totalSubmissions?: number;
+    replaysUsed?: number;
+    replaysLeft?: number;
   } | null>(null);
+
+  const fetchAttempts = async (overrideToken?: string) => {
+    const t = overrideToken || posToken;
+    if (!t) return;
+    try {
+      const res = await fetch(`/api/pos/${slug}/attempts`, {
+        headers: { Authorization: `Bearer ${t}` },
+      });
+      const data = await res.json();
+      if (data.replayMap) {
+        setReplayMap(data.replayMap);
+      }
+    } catch (e) {
+      console.error("fetchAttempts Error:", e);
+    }
+  };
 
   // Load session from sessionStorage if already unlocked
   useEffect(() => {
@@ -46,6 +66,7 @@ export default function PosPage() {
         setPosToken(savedToken);
         setPostData(JSON.parse(savedPost));
         fetchGroups();
+        fetchAttempts(savedToken);
         setStep("GROUP_SELECT");
       } catch (e) {
         sessionStorage.removeItem(`pos_token_${slug}`);
@@ -91,6 +112,7 @@ export default function PosPage() {
       sessionStorage.setItem(`pos_data_${slug}`, JSON.stringify(data.post));
 
       await fetchGroups();
+      await fetchAttempts(data.token);
       setStep("GROUP_SELECT");
     } catch (err: any) {
       setErrorMsg("Terjadi kesalahan koneksi. Coba lagi.");
@@ -165,8 +187,12 @@ export default function PosPage() {
           pointsEarned: data.pointsEarned,
           newTotalScore: data.newTotalScore,
           groupName: data.groupName,
+          totalSubmissions: data.totalSubmissions,
+          replaysUsed: data.replaysUsed,
+          replaysLeft: data.replaysLeft,
         });
 
+        fetchAttempts(posToken);
         setStep("SUMMARY");
       } catch (e: any) {
         setErrorMsg(e.message || "Gagal mengirim nilai pos");
@@ -197,6 +223,7 @@ export default function PosPage() {
           <GroupSelector
             postName={postData.name}
             groups={groups}
+            replayMap={replayMap}
             onSelectGroup={handleSelectGroup}
           />
         )}
@@ -300,6 +327,20 @@ export default function PosPage() {
                   {resultSummary.newTotalScore} PTS
                 </span>
               </div>
+
+              {resultSummary.replaysUsed !== undefined && (
+                <>
+                  <div className="h-px bg-slate-200" />
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-600">Status Jatah Mengulang:</span>
+                    <span className="font-mono text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                      {resultSummary.replaysUsed === 0
+                        ? "Submit Awal (10x Mengulang Tersisa)"
+                        : `Mengulang Ke-${resultSummary.replaysUsed} / 10 (Sisa ${resultSummary.replaysLeft}x)`}
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="w-full">

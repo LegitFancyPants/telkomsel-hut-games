@@ -80,11 +80,14 @@ export async function POST(
       pointsEarned: calculatedPoints,
       newTotalScore: result.newTotalScore,
       groupName: group.name,
+      totalSubmissions: result.totalSubmissions,
+      replaysUsed: result.replaysUsed,
+      replaysLeft: result.replaysLeft,
     });
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message || "Gagal memproses submit nilai pos" },
-      { status: 500 }
+      { status: 400 }
     );
   }
 }
