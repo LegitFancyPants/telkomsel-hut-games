@@ -46,8 +46,8 @@ export default function MemoryGame({
   onSubmitMemoryScore,
   isSubmitting,
 }: MemoryGameProps) {
-  // Stage state: 1, 2, 3, 4, 5, 6
-  const [currentStage, setCurrentStage] = useState<1 | 2 | 3 | 4 | 5 | 6>(1);
+  // Stage state: 1, 2, 3, 4
+  const [currentStage, setCurrentStage] = useState<1 | 2 | 3 | 4>(1);
   const [cards, setCards] = useState<CardItem[]>([]);
   const [flippedIndices, setFlippedIndices] = useState<number[]>([]);
   const [matchedPairsCount, setMatchedPairsCount] = useState<number>(0);
@@ -56,14 +56,12 @@ export default function MemoryGame({
   const [timeLeft, setTimeLeft] = useState<number>(timeLimit || 300); // 5 Menit (300 Detik)
 
   // Initialize cards for a given stage
-  const setupStage = (stage: 1 | 2 | 3 | 4 | 5 | 6) => {
+  const setupStage = (stage: 1 | 2 | 3 | 4) => {
     let pairCount = 2;
     if (stage === 1) pairCount = 2;  // Stage 1: 2x2 = 4 cards (2 pairs)
     if (stage === 2) pairCount = 4;  // Stage 2: 2x4 = 8 cards (4 pairs)
     if (stage === 3) pairCount = 8;  // Stage 3: 4x4 = 16 cards (8 pairs)
     if (stage === 4) pairCount = 10; // Stage 4: 4x5 = 20 cards (10 pairs)
-    if (stage === 5) pairCount = 12; // Stage 5: 4x6 = 24 cards (12 pairs)
-    if (stage === 6) pairCount = 15; // Stage 6: 5x6 = 30 cards (15 pairs)
 
     const selectedSymbols = ALL_SYMBOLS.slice(0, pairCount);
     const cardDeck: CardItem[] = [];
@@ -88,8 +86,8 @@ export default function MemoryGame({
   };
 
   const handleNextStage = () => {
-    if (currentStage < 6) {
-      const nextStage = (currentStage + 1) as 1 | 2 | 3 | 4 | 5 | 6;
+    if (currentStage < 4) {
+      const nextStage = (currentStage + 1) as 1 | 2 | 3 | 4;
       setCurrentStage(nextStage);
       setupStage(nextStage);
       setGameState("PLAYING");
@@ -147,11 +145,7 @@ export default function MemoryGame({
                 ? 4
                 : currentStage === 3
                 ? 8
-                : currentStage === 4
-                ? 10
-                : currentStage === 5
-                ? 12
-                : 15;
+                : 10; // Stage 4
 
             if (nextCount === requiredPairs) {
               // Stage Completed!
@@ -162,15 +156,11 @@ export default function MemoryGame({
                   ? 200
                   : currentStage === 3
                   ? 300
-                  : currentStage === 4
-                  ? 400
-                  : currentStage === 5
-                  ? 500
-                  : 600;
+                  : 400; // Stage 4
 
               setAccumulatedPoints((prev) => prev + stagePoints);
 
-              if (currentStage === 6) {
+              if (currentStage === 4) {
                 setGameState("FINISHED");
               } else {
                 setGameState("STAGE_CLEAR");
@@ -213,18 +203,16 @@ export default function MemoryGame({
             <Eye className="w-8 h-8 text-red-600" />
           </div>
           <h3 className="text-base font-extrabold text-slate-900 uppercase mb-2">
-            GAME MEMORY MATCH (6 STAGE)
+            GAME MEMORY MATCH (4 STAGE)
           </h3>
           <p className="text-xs text-slate-600 leading-relaxed mb-4 max-w-xs font-medium">
-            Waktu: <span className="font-bold text-red-600">5 Menit</span> | Selesaikan hingga <span className="font-bold text-red-600">Stage 6 (Grid 5x6)</span>!
+            Waktu: <span className="font-bold text-red-600">5 Menit</span> | Selesaikan hingga <span className="font-bold text-red-600">Stage 4 (Grid 4x5)</span>!
           </p>
           <div className="flex flex-wrap justify-center gap-1.5 text-[10px] text-slate-600 mb-6 font-mono font-bold">
             <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200">S1: 2x2</span>
             <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200">S2: 2x4</span>
             <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200">S3: 4x4</span>
-            <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200">S4: 4x5</span>
-            <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200">S5: 4x6</span>
-            <span className="px-2 py-0.5 rounded bg-red-50 border border-red-200 text-red-600 font-extrabold">S6: 5x6</span>
+            <span className="px-2 py-0.5 rounded bg-red-50 border border-red-200 text-red-600 font-extrabold">S4: 4x5</span>
           </div>
 
           <button
@@ -247,7 +235,7 @@ export default function MemoryGame({
             </div>
 
             <div className="text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-red-50 border border-red-200 text-red-700">
-              STAGE {currentStage} / 6
+              STAGE {currentStage} / 4
             </div>
 
             <div className="text-xs font-mono font-black text-slate-900">
@@ -278,11 +266,7 @@ export default function MemoryGame({
                     ? "2x4 GRID"
                     : currentStage + 1 === 3
                     ? "4x4 GRID"
-                    : currentStage + 1 === 4
-                    ? "4x5 GRID"
-                    : currentStage + 1 === 5
-                    ? "4x6 GRID"
-                    : "5x6 GRID"}
+                    : "4x5 GRID"}
                   )
                 </span>
                 <ChevronRight className="w-4 h-4" />
@@ -297,11 +281,7 @@ export default function MemoryGame({
                   ? "grid-cols-4 max-w-[340px]"
                   : currentStage === 3
                   ? "grid-cols-4 max-w-[340px]"
-                  : currentStage === 4
-                  ? "grid-cols-5 max-w-[380px]"
-                  : currentStage === 5
-                  ? "grid-cols-6 max-w-[440px]"
-                  : "grid-cols-6 max-w-[440px]"
+                  : "grid-cols-5 max-w-[380px]"
               }`}
             >
               {cards.map((card, idx) => {
@@ -344,7 +324,7 @@ export default function MemoryGame({
             PERMAINAN SELESAI!
           </h3>
           <p className="text-xs text-slate-600 mb-1">
-            Stage Dicapai: <span className="font-bold text-slate-900">{currentStage} / 6 Stage</span>
+            Stage Dicapai: <span className="font-bold text-slate-900">{currentStage} / 4 Stage</span>
           </p>
           <p className="text-sm font-black text-red-600 mb-4">
             Total Poin Diperoleh: +{accumulatedPoints} PTS
